@@ -20,8 +20,8 @@ function Asteroid(){
 	};
 
 	this.Update = function (dt) {
-		this.Pos.X += Math.sin(Math.PI + this.Direction.X * Math.PI / 180) * this.Speed;
-		this.Pos.Y -= Math.cos(Math.PI + this.Direction.Y * Math.PI / 180) * this.Speed;
+		this.Pos.X += Math.sin(Math.PI + this.Direction.X * Math.PI / 180) * this.Speed * dt * ASTEROID_SPEED_MULTIPLIER;
+		this.Pos.Y -= Math.cos(Math.PI + this.Direction.Y * Math.PI / 180) * this.Speed * dt * ASTEROID_SPEED_MULTIPLIER;
 
 		if (this.Pos.X >= CANVASWIDTH + CANVAS_BORDER_SPACE) this.Pos.X -= CANVASWIDTH;
 		if (this.Pos.X <= - CANVAS_BORDER_SPACE) this.Pos.X += CANVASWIDTH;
