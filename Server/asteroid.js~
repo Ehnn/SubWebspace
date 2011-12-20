@@ -18,7 +18,7 @@ function Asteroid(){
 		this.Direction.X = dirX;
 		this.Direction.Y = dirY;
 		this.size = s;
-		this.Radius = ASTEROID_IMAGE_HEIGHT * this.size * ASTEROID_SIZE_MULTIPLIER / 2;
+		this.Radius = this.img.height * this.size * ASTEROID_SIZE_MULTIPLIER / 2;
 	};
 
 	this.Update = function (dt) {

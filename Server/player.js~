@@ -50,6 +50,8 @@ function Player() {
 	this.Init = function(/** string */ imgsrc, /** int */ X, /** int */ Y, /** int */ rotation, /** int */ playernumber) {
 		this.Pos.X = X;
 		this.Pos.Y = Y;
+		this.img = new Image();
+		this.img.src = imgsrc;
 		this.Alive = true;
 		this.PlayerNumber = playernumber;
 		this.Rotation = rotation;

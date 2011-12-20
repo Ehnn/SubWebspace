@@ -92,7 +92,8 @@ function Game() {
 		this.evilPlayer.Update(dt);
 
 		for (i in this.goodPlayer.Shots) {
-			var shot = this.goodPlayer.Shots[i];
+			shot = this.goodPlayer.Shots[i];
+			var shot = this;
 			shot.Update(dt);
 			
 			/** Check collision with spaceships  */
@@ -117,10 +118,10 @@ function Game() {
 					DestroyAsteroid(this, j);
 				}
 			});
-		}
+		});
 
 		for (i in this.evilPlayer.Shots) {
-			var shot = this.evilPlayer.Shots[i];
+			shot = this.evilPlayer.Shots[i];
 			shot.Update(dt);
 
 			/** Check collision with spaceships  */
@@ -146,7 +147,7 @@ function Game() {
 					DestroyAsteroid(this, j);
 				}
 			});
-		}
+		});
 
 
 		for (i in this.Asteroids) {

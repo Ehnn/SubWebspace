@@ -1,7 +1,3 @@
-LASERSPEED = 20;
-LASER_FADEOUT = 2;
-LASER_FADEOUT_POINT = 0.5;
-
 module.exports.MakeLaser = function () { return new Laser(); }
 
 function Laser() {
