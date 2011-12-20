@@ -122,19 +122,23 @@ jQuery(function () {
     var socket = io.connect('http://spacegame.chickenkiller.com');
     //var socket = io.connect('http://localhost:8080');
     socket.emit('createplayer', {});
+    var debug = jQuery("<div />").css("position", "absolute").css("top", "100px").css("left", "1100px").appendTo(document.body);
     socket.on('playerdata', function (data) {
-        game.PlayerData = data;
+        debug.append(jQuery("<div />").text("input received:" + data));
+        //game.PlayerData = data;
     });
-    socket.on('playercreated', function (id) {
+    /*socket.on('playercreated', function (id) {
         alert(id);
         game.myplayerguid = id;
-    });
+    });*/
     
     if (!socket) {
         //change to retry later
         alert('unable to connect to server');
         return;
     }
+    
+    socket.emit('playerinput', 4);
     
     loadAllResources();
 });
