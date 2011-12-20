@@ -1,4 +1,4 @@
-FRAMES_PER_SECOND = 30;
+FRAMES_PER_SECOND = 1;
 SECONDS_BETWEEN_FRAMES = 1000 / FRAMES_PER_SECOND;
 
 CANVASWIDTH = 1024;
@@ -26,7 +26,7 @@ function Game() {
 
 	this.gameloop = null;
 
-        this.lastFrame = new Date().getTime();
+    this.lastFrame = new Date().getTime();
 
 	this.Init = function () {
 	};
@@ -42,7 +42,7 @@ function Game() {
 		this.evilPlayer.Init("spaceship2.png", CANVASWIDTH - 200, CANVASHEIGHT - 200, 90, 2);
 
 		/** Game loop */
-	        this.gameloop = setInterval(function(){ that.GameLoop();}, SECONDS_BETWEEN_FRAMES);
+        this.gameloop = setInterval(function(){ that.GameLoop();}, SECONDS_BETWEEN_FRAMES);
 		
 		return this;
 	};
@@ -50,7 +50,7 @@ function Game() {
 	this.GameLoop = function () {
 		var thisFrame = new Date().getTime();
 		var dt = (thisFrame - this.lastFrame)/1000;
-	        this.lastFrame = thisFrame;
+        this.lastFrame = thisFrame;
 
 		this.Update(dt);
 	};
@@ -91,7 +91,7 @@ function Game() {
 		this.goodPlayer.Update(dt);
 		this.evilPlayer.Update(dt);
 
-		for (i in this.goodPlayer.Shots) {
+		for (var i in this.goodPlayer.Shots) {
 			var shot = this.goodPlayer.Shots[i];
 			shot.Update(dt);
 			
@@ -110,16 +110,18 @@ function Game() {
 
 			if (shot.Fadeout <= 0) DestroyShot(that.goodPlayer, i);
 
-			jQuery(that.Asteroids).each(function (j) {
-				if (CheckAsteroidCollision(shot, this))
+            for (var j in this.Asteroids)
+            {
+                var asteroid = this.Asteroids[j];
+				if (CheckAsteroidCollision(shot, asteroid))
 				{
 					DestroyShot(that.goodPlayer, i);
-					DestroyAsteroid(this, j);
+					DestroyAsteroid(asteroid, j);
 				}
-			});
+			}
 		}
 
-		for (i in this.evilPlayer.Shots) {
+		for (var i in this.evilPlayer.Shots) {
 			var shot = this.evilPlayer.Shots[i];
 			shot.Update(dt);
 
@@ -139,17 +141,19 @@ function Game() {
 
 			if (shot.Fadeout <= 0) DestroyShot(that.evilPlayer, i);
 
-			jQuery(that.Asteroids).each(function (j) {
-				if (CheckAsteroidCollision(shot, this))
+			for (var j in this.Asteroids)
+            {
+                var asteroid = this.Asteroids[j];
+				if (CheckAsteroidCollision(shot, asteroid))
 				{
 					DestroyShot(that.evilPlayer, i);
-					DestroyAsteroid(this, j);
+					DestroyAsteroid(asteroid, j);
 				}
-			});
+			}
 		}
 
 
-		for (i in this.Asteroids) {
+		for (var i in this.Asteroids) {
 			asteroid = this.Asteroids[i];
 			asteroid.Update(dt);
 
