@@ -107,14 +107,7 @@ function Player() {
 	};
 
 	this.Destroy = function () {
-	    if (this.Alive) {
-	        this.Alive = false;
-            if (jQuery("input:checked").length) explosionsound.play();
-	        var explosion = jQuery("#explosiondiv" + this.PlayerNumber).css('left', this.Pos.X - 50).css('top', this.Pos.Y - 60).removeClass("invis");
-	        setTimeout(function () {
-	            explosion.addClass("invis");
-	        }, 750);
-	    }
+        this.Alive = false;
 	};
 
 	this.Draw = function () {
