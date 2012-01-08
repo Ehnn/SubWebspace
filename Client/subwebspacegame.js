@@ -206,6 +206,21 @@ function Game() {
 	this.ReceiveData = function (data) {
 		this.lastReceivedData = new Date().getTime();
 
+		for (var i in this.Players)
+		{
+			var player = this.Players[i];
+			player.updated = false;
+		}
+
+		for (var i in data) {
+			playerdata = data[i];
+			if (that.myPlayer.ID == playerdata.ID)
+			{
+				that.myPlayer.UpdateData(playerdata);
+				break;
+			}
+		}
+
 		for (var j in data) {
 			var found = false;
 			var serverplayerdata = data[j];
@@ -213,6 +228,7 @@ function Game() {
 				var player = that.Players[i];
 
 				if (player.ID == serverplayerdata.ID) {
+					player.updated = true;
 					player.UpdateData(serverplayerdata);
 					found = true;
 					break;
@@ -226,6 +242,10 @@ function Game() {
 				that.Players.push(enemyplayer);
 			}
 		}
+
+		for (var i in this.Players)
+			if (!this.Players[i].updated)
+				this.Players.splice(i, 1);
 		
 //		jQuery("<div />").text(":" + data + ":").appendTo(jQuery(document.body));
 	};

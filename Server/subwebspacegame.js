@@ -58,7 +58,6 @@ function Game() {
 			CreateAsteroid(3);
 		}*/
 
-		console.log("updating");
 		for (var i in this.Players)
 		{
 			var player = this.Players[i];
@@ -156,6 +155,12 @@ function Game() {
 		player.Init(1, id);
 		player.Spawn(200, 200, -90);
 		this.Players.push(player);
+	};
+	
+	this.RemovePlayer = function (/** int */ id) {
+		for (var i in this.Players)
+			if (this.Players[i].ID == id)
+				this.Players.splice(i, 1);
 	};
 
 	this.UpdatePlayerActions = function (/** client player data */ playerdata) {

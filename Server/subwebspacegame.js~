@@ -1,4 +1,4 @@
-FRAMES_PER_SECOND = 1;
+FRAMES_PER_SECOND = 30;
 SECONDS_BETWEEN_FRAMES = 1000 / FRAMES_PER_SECOND;
 
 CANVASWIDTH = 1024;
@@ -156,6 +156,12 @@ function Game() {
 		player.Init(1, id);
 		player.Spawn(200, 200, -90);
 		this.Players.push(player);
+	};
+	
+	this.RemovePlayer = function (/** int */ id) {
+		for (var i in this.Players)
+			if (this.Players[i].ID == id)
+				this.Players.splice(i, 1);
 	};
 
 	this.UpdatePlayerActions = function (/** client player data */ playerdata) {

@@ -35,15 +35,15 @@ setInterval(SendData, UPDATE_TIME_BETWEEN_SENDS);
 
 
 io.sockets.on('connection', function (socket) {
-	PlayerCount++;
+	socket.PlayerID = PlayerCount++;
 	Sockets.push(socket);
 	console.log("connected a player to socket " + socket);
 
-	console.log("Player given ID of " + PlayerCount);
+	console.log("Player given ID of " +  socket.PlayerID);//PlayerID);
 
-	game.CreatePlayer(PlayerCount);
+	game.CreatePlayer(socket.PlayerID);
 
-	socket.emit("clientaccepted", { PlayerID:PlayerCount });
+	socket.emit("clientaccepted", { PlayerID:socket.PlayerID });
 	/*socket.on('createplayer', function (data) {
 		var playerid = game.CreateNewPlayer();
 		socket.emit('playercreated', playerid);
@@ -53,6 +53,12 @@ io.sockets.on('connection', function (socket) {
 		game.UpdatePlayerActions(data);
 	});
 
+	socket.on('disconnect', function (data) {
+		game.RemovePlayer(socket.PlayerID);
+		for (var i in Sockets)
+			if (Sockets[i].PlayerID == socket.PlayerID)
+				Sockets.splice(i, 1);
+	});
 	/*socket.on('playerinput', function (data) {
         console.log('player input received: ' + data);
 		//game.PlayerInput(data);
