@@ -90,8 +90,8 @@ function Player() {
 
 
 		/** calculate forward */
-		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180);
-		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180);
+		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180) * PLAYER_SPEED;
+		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180) * PLAYER_SPEED;
 
 		/** acceleration cap */
 		if (this.Acceleration.X >= PLAYER_ACCELERATION_CAP) this.Acceleration.X = PLAYER_ACCELERATION_CAP;

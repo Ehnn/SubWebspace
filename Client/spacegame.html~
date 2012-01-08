@@ -28,6 +28,6 @@
 <script src="subwebspacegame.js"></script>
 <script src="asteroid.js"></script>
 
-<!--<script src="subwebspaceclient.js"></script>-->
+<script src="subwebspaceclient.js"></script>
 
 </body></html>

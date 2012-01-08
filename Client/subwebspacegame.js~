@@ -8,8 +8,7 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-//SERVER_CONNECTION = "http://localhost:8080";
-SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+SERVER_CONNECTION = "http://localhost:8080";
 SEND_TIME = 1000;
 
 

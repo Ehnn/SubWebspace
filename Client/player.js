@@ -1,3 +1,9 @@
+PLAYER_ROTATION_SPEED = 420;
+PLAYER_ACCELERATION_SPEED = 0.3;
+PLAYER_ACCELERATION_CAP = 0.7;
+PLAYER_RELOAD_TIME = 0.25;
+
+
 function Player() {
 	this.Pos = {};
 	this.Pos.X = 0;
@@ -19,8 +25,7 @@ function Player() {
 	this.Reload = 0;
 	this.Alive = false;
 
-	this.img = null;
-	this.PlayerNumber = null;
+	this.shiptype = null;
 
 	this.Accelerating = 0;
 	this.Rotating = 0;
@@ -28,32 +33,47 @@ function Player() {
 
 	this.Lives = null;
 
-	this.Shoot = function () {
-	    if (this.Alive && this.Reload === 0) {
+	this.GetData = function () {
+		return {
+			Accelerating : this.Accelerating,
+			Rotating : this.Rotating,
+			Shooting : this.Shooting,
 
-	        if (jQuery("input:checked").length) {
-	            if (this.PlayerNumber == 1)
-	                lasersound.play();
-	            else
-	                evillasersound.play();
-	        }
-
-	        var shot = new Laser();
-	        shot.Init(this.Pos.X, this.Pos.Y, this.Forward.X, this.Forward.Y, this.Rotation, this.PlayerNumber);
-	        this.Shots.push(shot);
-	        this.Reload = PLAYER_RELOAD_TIME;
-	    }
+			Pos : this.Pos,
+			Forward : this.Forward,
+			Speed : this.Speed,
+			Acceleration : this.Acceleration,
+			Rotation : this.Rotation
+		};
 	};
 
-	this.Init = function(/** string */ imgsrc, /** int */ X, /** int */ Y, /** int */ rotation, /** int */ playernumber) {
+	this.Shoot = function () {
+		if (this.Alive && this.Reload === 0) {
+			if (jQuery("input:checked").length) {
+			    if (this.shiptype == 1)
+			        lasersound.play();
+			    else
+			        evillasersound.play();
+			}
+
+			var shot = new Laser();
+			shot.Init(this.Pos.X, this.Pos.Y, this.Forward.X, this.Forward.Y, this.Rotation, this.shiptype);
+			this.Shots.push(shot);
+			this.Reload = PLAYER_RELOAD_TIME;
+		}
+	};
+
+	this.Init = function(/** int */shiptype, /** int */ id) {
+		this.shiptype = shiptype;
+		this.ID = id;
+	};
+
+	this.Spawn = function (/** int */ X, /** int */ Y, /** int */ rotation) {
 		this.Pos.X = X;
 		this.Pos.Y = Y;
-		this.img = new Image();
-		this.img.src = imgsrc;
-		this.Alive = true;
-		this.PlayerNumber = playernumber;
 		this.Rotation = rotation;
 		this.Lives = 10;
+		this.Alive = true;
 	};
 
 	this.Update = function (dt) {
@@ -85,8 +105,8 @@ function Player() {
 
 
 		/** calculate forward */
-		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180) * PLAYER_SPEED;
-		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180) * PLAYER_SPEED;
+		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180);
+		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180);
 
 		/** acceleration cap */
 		if (this.Acceleration.X >= PLAYER_ACCELERATION_CAP) this.Acceleration.X = PLAYER_ACCELERATION_CAP;
@@ -95,8 +115,8 @@ function Player() {
 		if (this.Acceleration.Y <= -PLAYER_ACCELERATION_CAP) this.Acceleration.Y = -PLAYER_ACCELERATION_CAP;
 
 		/** acceleration effect on speed */
-		this.Speed.X += this.Acceleration.X * dt;
-		this.Speed.Y += this.Acceleration.Y * dt;
+		this.Speed.X += this.Acceleration.X;
+		this.Speed.Y += this.Acceleration.Y;
 
 		/** Deceleration */
 		this.Speed.X -= dt * this.Speed.X / 2;
@@ -109,8 +129,9 @@ function Player() {
 	this.Destroy = function () {
 	    if (this.Alive) {
 	        this.Alive = false;
+		//FIX. badly
             if (jQuery("input:checked").length) explosionsound.play();
-	        var explosion = jQuery("#explosiondiv" + this.PlayerNumber).css('left', this.Pos.X - 50).css('top', this.Pos.Y - 60).removeClass("invis");
+	        var explosion = jQuery("#explosiondiv" + this.shiptype).css('left', this.Pos.X - 50).css('top', this.Pos.Y - 60).removeClass("invis");
 	        setTimeout(function () {
 	            explosion.addClass("invis");
 	        }, 750);
@@ -120,11 +141,30 @@ function Player() {
 	this.Draw = function () {
 		if (this.Alive)
 		{
+			var img = this.shiptype == 1 ? imgship1 : imgship2;
 			game.backBufferContext2D.save();
 			game.backBufferContext2D.translate(this.Pos.X, this.Pos.Y);
 			game.backBufferContext2D.rotate(this.Rotation * Math.PI / 180);
-			game.backBufferContext2D.drawImage(this.img, - this.img.width / 2, - this.img.height / 2);
+			game.backBufferContext2D.drawImage(img, - img.width / 2, - img.height / 2);
 			game.backBufferContext2D.restore();
 		}
+	};
+
+	this.UpdateData = function (/** server player obj */ playerdata) {
+		this.Pos = playerdata.Pos;
+		this.Speed = playerdata.Speed;
+		this.Acceleration = playerdata.Acceleration;
+
+		this.Shots = playerdata.Shots;
+
+		this.Rotation = playerdata.Rotation;
+		this.Reload = playerdata.Reload;
+		this.Alive = playerdata.Alive;
+
+		this.Accelerating = playerdata.Accelerating;
+		this.Rotating = playerdata.Rotating;
+		this.Shooting = playerdata.Shooting;
+
+		this.Lives = playerdata.Lives;
 	};
 }

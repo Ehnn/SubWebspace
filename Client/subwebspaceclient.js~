@@ -78,7 +78,6 @@ jQuery(function () {
 	    {
 		game = new Game();
 		game.Init();
-		game.Start();
 
 		lastSendData = new Date().getTime();
 		jQuery(document).keydown(game.onKeyDown);
