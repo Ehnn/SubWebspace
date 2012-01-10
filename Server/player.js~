@@ -62,7 +62,7 @@ function Player() {
 	};
 
 	this.Update = function (dt) {
-		if (this.Accelerating === 0)
+		/*if (this.Accelerating === 0)
 		{
 			this.Acceleration.X = 0;
 			this.Acceleration.Y = 0;
@@ -73,7 +73,7 @@ function Player() {
 			this.Acceleration.Y += this.Accelerating * dt * PLAYER_ACCELERATION_SPEED * this.Forward.Y;
 		}
 
-		if (this.Rotating !== 0) this.Rotation += this.Rotating * dt * PLAYER_ROTATION_SPEED;
+		if (this.Rotating !== 0) this.Rotation += this.Rotating * dt * PLAYER_ROTATION_SPEED;*/
 
 		if (this.Shooting === true)
 			this.Shoot();
@@ -88,10 +88,9 @@ function Player() {
 		if (this.Pos.Y >= CANVASHEIGHT + CANVAS_BORDER_SPACE) this.Pos.Y -= CANVASHEIGHT;
 		if (this.Pos.Y <= - CANVAS_BORDER_SPACE) this.Pos.Y += CANVASHEIGHT;
 
-
 		/** calculate forward */
-		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180) * PLAYER_SPEED;
-		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180) * PLAYER_SPEED;
+		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180);
+		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180);
 
 		/** acceleration cap */
 		if (this.Acceleration.X >= PLAYER_ACCELERATION_CAP) this.Acceleration.X = PLAYER_ACCELERATION_CAP;
@@ -104,8 +103,8 @@ function Player() {
 		this.Speed.Y += this.Acceleration.Y;
 
 		/** Deceleration */
-		this.Speed.X -= dt * this.Speed.X / 2;
-		this.Speed.Y -= dt * this.Speed.Y / 2;
+//		this.Speed.X -= dt * this.Speed.X / 2;
+//		this.Speed.Y -= dt * this.Speed.Y / 2;
 
 		this.Pos.X += this.Speed.X;
 		this.Pos.Y += this.Speed.Y * -1;
@@ -116,8 +115,29 @@ function Player() {
 	};
 
 	this.UpdateActions = function (/** client player obj */ playerdata) {
-		this.Accelerating = playerdata.Accelerating;
+		rightKeyPressTime = playerdata.rightKeyPressTime;
+		leftKeyPressTime = playerdata.leftKeyPressTime;
+		upKeyPressTime = playerdata.upKeyPressTime;
+		downKeyPressTime = playerdata.downKeyPressTime;
+		console.log(downKeyPressTime);
+		spaceKeyPressTime = playerdata.spaceKeyPressTime;
+
+//		this.Acceleration.X += this.forwardKeyPressTime * PLAYER_ACCELERATION_SPEED * this.Forward.X - this.backwardKeyPressTime * PLAYER_ACCELERATION_SPEED * this.Forward.X;
+		this.Acceleration.X = this.Forward.X * PLAYER_ACCELERATION_SPEED * (upKeyPressTime - downKeyPressTime);
+
+		this.Acceleration.Y = this.Forward.Y * PLAYER_ACCELERATION_SPEED * (upKeyPressTime - downKeyPressTime);
+
+		this.Rotation += (rightKeyPressTime - leftKeyPressTime) * PLAYER_ROTATION_SPEED;
+		/*this.Accelerating = playerdata.Accelerating;
 		this.Rotating = playerdata.Rotating;
-		this.Shooting = playerdata.Shooting;
+		this.Shooting = playerdata.Shooting;*/
 	};
+
+
+	var rightKeyPressTime = 0;
+	var leftKeyPressTime = 0;
+	var upKeyPressTime = 0;
+	var downKeyPressTime = 0;
+	var spaceKeyPressTime = 0;
+
 }

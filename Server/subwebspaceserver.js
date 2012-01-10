@@ -43,7 +43,12 @@ io.sockets.on('connection', function (socket) {
 
 	game.CreatePlayer(socket.PlayerID);
 
-	socket.emit("clientaccepted", { PlayerID:socket.PlayerID });
+	socket.emit("clientaccepted", { PlayerID:socket.PlayerID, gamestarttime:game.gamestarttime });
+
+	socket.on("clientping", function (data) {
+		data.servertime = new Date().getTime();
+		socket.emit("serverping", data);
+	});
 	/*socket.on('createplayer', function (data) {
 		var playerid = game.CreateNewPlayer();
 		socket.emit('playercreated', playerid);

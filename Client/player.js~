@@ -1,5 +1,5 @@
 PLAYER_ROTATION_SPEED = 420;
-PLAYER_ACCELERATION_SPEED = 0.2;
+PLAYER_ACCELERATION_SPEED = 0.3;
 PLAYER_ACCELERATION_CAP = 0.7;
 PLAYER_RELOAD_TIME = 0.25;
 
@@ -119,8 +119,8 @@ function Player() {
 		this.Speed.Y += this.Acceleration.Y;
 
 		/** Deceleration */
-		this.Speed.X -= dt * this.Speed.X / 2;
-		this.Speed.Y -= dt * this.Speed.Y / 2;
+		//this.Speed.X -= dt * this.Speed.X / 2;
+		//this.Speed.Y -= dt * this.Speed.Y / 2;
 
 		this.Pos.X += this.Speed.X;
 		this.Pos.Y += this.Speed.Y * -1;
@@ -167,4 +167,4 @@ function Player() {
 
 		this.Lives = playerdata.Lives;
 	};
-}
+};

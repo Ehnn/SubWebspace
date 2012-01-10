@@ -167,4 +167,4 @@ function Player() {
 
 		this.Lives = playerdata.Lives;
 	};
-}
+};

@@ -8,8 +8,8 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-//SERVER_CONNECTION = "http://localhost:8080";
-SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+SERVER_CONNECTION = "http://localhost:8080";
+//SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
 SEND_TIME = 1000;
 
 
@@ -89,6 +89,8 @@ function Game() {
         this.lastFrame = new Date().getTime();
 	this.lastSentData = new Date().getTime();
 	this.lastReceivedData = new Date().getTime();
+
+	this.pingtime = 0;
 
 	var socket;
 
@@ -175,11 +177,39 @@ function Game() {
 		that.GameState = 3;
 		socket = io.connect(SERVER_CONNECTION);
 		socket.on("clientaccepted", function (data) {
-			that.Connected = true;
-			that.myPlayer.Init(1, data.PlayerID);
-			that.GameState = 4;
-			socket.on("gamedata", that.ReceiveData);
-			Join();
+			Ping(10, function () {
+				that.Connected = true;
+				that.myPlayer.Init(1, data.PlayerID);
+				that.GameState = 4;
+				socket.on("gamedata", that.ReceiveData);
+				Join();	
+			});
+		});
+	};
+
+	var Ping = function (totalPings, callback) {
+		var pingtimes = [];
+		socket.emit("clientping", { clientping:new Date().getTime() });
+		socket.on("serverping", function (data) {
+			var newtime = new Date().getTime();
+			pingtimes.push((newtime - data.clientping) / 2);
+			if (totalPings > 0)
+			{
+				socket.emit("clientping", { clientping:new Date().getTime() });
+				totalPings--;
+			}
+			else
+			{
+				var lowest = pingtimes[0], highest = pingtimes[0], avg = 0;
+				for (var i in pingtimes) {
+					var time = pingtimes[i];
+					if (time > highest) highest = time;
+					if (time < lowest) lowest = time;
+					avg += time;
+				}
+				that.pingtime = (avg - highest - lowest) / (pingtimes.length - 2);
+				if (callback) callback();
+			}
 		});
 	};
 
@@ -209,15 +239,16 @@ function Game() {
 		for (var i in this.Players)
 		{
 			var player = this.Players[i];
+			player.updated = false;
 		}
 
 		for (var i in data) {
 			playerdata = data[i];
-			if (that.myPlayer.ID == playerdata.ID)
+/*			if (that.myPlayer.ID == playerdata.ID)
 			{
-				that.myPlayer.UpdateData(playerdata);
+//				that.myPlayer.UpdateData(playerdata);
 				break;
-			}
+			}*/
 		}
 
 		for (var j in data) {
@@ -245,8 +276,10 @@ function Game() {
 		for (var i in this.Players)
 			if (!this.Players[i].updated)
 				this.Players.splice(i, 1);
-		
-//		jQuery("<div />").text(":" + data + ":").appendTo(jQuery(document.body));
+	};
+
+	var debugobj = function (text) {
+		var test = jQuery("<div />").text(text).appendTo(jQuery(document.body));
 	};
 
 	this.SendData = function (dt) {
@@ -255,42 +288,58 @@ function Game() {
 		if (now - this.lastSentData > SEND_TIME)
 		{
 			this.lastSentData = new Date().getTime();
-			socket.emit("clientdata", that.myPlayer);
+			var actions = {
+				rightKeyPressTime : rightKeyPressTime,
+				leftKeyPressTime : leftKeyPressTime,
+				upKeyPressTime : upKeyPressTime,
+				downKeyPressTime : downKeyPressTime,
+				spaceKeyPressTime : spaceKeyPressTime,
+				ID: that.myPlayer.ID
+			};
+
+			socket.emit("clientdata", actions);//{ rightKeyPressTime:rightKeyPressTime, that.myPlayer);
+
+			rightKeyPressTime = 0;
+			leftKeyPressTime = 0;
+			upKeyPressTime = 0;
+			downKeyPressTime = 0;
+			spaceKeyPressTime = 0;
 		}
 	};
 
 	this.Update = function (/** time diff */ dt) {
 		//FIX to a better check
-		/** good player input */
-		if (p1rightKey) this.myPlayer.Rotating = 1;
-		else if (p1leftKey) this.myPlayer.Rotating = -1;
+		/** player input */
+		if (p1rightKey) {
+			this.myPlayer.Rotating = 1;
+			rightKeyPressTime += dt;			
+		}
+		else if (p1leftKey) {
+			this.myPlayer.Rotating = -1;
+			leftKeyPressTime += dt;
+		}
 		else this.myPlayer.Rotating = 0;
 
-		if (p1upKey) this.myPlayer.Accelerating = 1;
-		else if (p1downKey) this.myPlayer.Accelerating = -1;
+		if (p1upKey) {
+			upKeyPressTime += dt;
+			this.myPlayer.Accelerating = 1;
+		}
+		else if (p1downKey) {
+			downKeyPressTime += dt;
+			this.myPlayer.Accelerating = -1;
+		}
 		else this.myPlayer.Accelerating = 0;
 
-		if (p1spaceKey) this.myPlayer.Shooting = true;
+		if (p1spaceKey) {
+			spaceKeyPressTime += dt;
+			this.myPlayer.Shooting = true;
+		}
 		else this.myPlayer.Shooting = false;
 
-		/** Use server data and update players */
-		/** evil player input */
-/*		if (p2rightKey) this.evilPlayer.Rotating = 1;
-		else if (p2leftKey) this.evilPlayer.Rotating = -1;
-		else this.evilPlayer.Rotating = 0;
-
-		if (p2upKey) this.evilPlayer.Accelerating = 1;
-		else if (p2downKey) this.evilPlayer.Accelerating = -1;
-		else this.evilPlayer.Accelerating = 0;
-
-		if (p2spaceKey) this.evilPlayer.Shooting = true;
-		else this.evilPlayer.Shooting = false;*/
-
-		/** Draw our player */
-
+		/** Update our player */
 		this.myPlayer.Update(dt);
 
-		/** Draw our shots */
+		/** Update our shots */
 		for (var i in this.myPlayer.Shots)
 		{
 			var shot = this.myPlayer.Shots[i];
@@ -298,7 +347,7 @@ function Game() {
 			if (shot.Fadeout <= 0) this.myPlayer.Shots.splice(i, 1);
 		}
 
-		/** Draw players */
+		/** Update players */
 		for (var i in this.Players)
 		{
 			var player = this.Players[i];
@@ -311,7 +360,7 @@ function Game() {
 			}
 		}
 
-		/** Draw asteroids */
+		/** Update asteroids */
 		for (var i in this.Asteroids)
 		{
 			var asteroid = this.Asteroids[i];
@@ -382,11 +431,11 @@ function Game() {
 	};
 
 	var drawHUD = function () {
-		//health, allies, enemies, map
+		//health, allies, enemies, map, ping
 		that.backBufferContext2D.fillStyle = "rgba(0,0,200, 0.4)";
-		that.backBufferContext2D.fillRect (40, CANVASHEIGHT - 50 , 30 * that.myPlayer.Lives, 40);
+		that.backBufferContext2D.fillRect (CANVASWIDTH / 2 - 150, CANVASHEIGHT - 50 , 30 * that.myPlayer.Lives, 40);
 		that.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
-		that.backBufferContext2D.strokeRect(40, CANVASHEIGHT - 50 , 300, 40);
+		that.backBufferContext2D.strokeRect(CANVASWIDTH / 2 - 150, CANVASHEIGHT - 50 , 300, 40);
 	};
 
 	var drawBackbuffer = function () {
@@ -412,16 +461,15 @@ function Game() {
 	};
 
 	var p1rightKey = false;
+	var rightKeyPressTime = 0;
 	var p1leftKey = false;
+	var leftKeyPressTime = 0;
 	var p1upKey = false;
+	var upKeyPressTime = 0;
 	var p1downKey = false;
+	var downKeyPressTime = 0;
 	var p1spaceKey = false;
-
-	var p2rightKey = false;
-	var p2leftKey = false;
-	var p2upKey = false;
-	var p2downKey = false;
-	var p2spaceKey = false;
+	var spaceKeyPressTime = 0;
 
 	var enter = false;
     

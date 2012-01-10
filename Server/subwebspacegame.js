@@ -14,7 +14,7 @@ var asteroidfile = require('./asteroid');
 var playerfile = require('./player');
 
 function Game() {
-    var that = this;
+	var that = this;
 	this.Players = null;
 	this.Asteroids = null;
 	this.AsteroidCreationTimer = 0;
@@ -25,11 +25,15 @@ function Game() {
 	this.gameloop = null;
 
 	this.lastFrame = new Date().getTime();
+	this.tick = 0;
+	this.gamestarttime = 0;
 
 	this.Init = function () {
 	};
 
 	this.Start = function () {
+		this.gamestarttime = new Date().getTime();
+		this.tick = 0;
 		that.GameState = 0;
 
 		/** Init players / asteroids */
@@ -43,6 +47,7 @@ function Game() {
 	};
 
 	this.GameLoop = function () {
+		this.tick++;
 		var thisFrame = new Date().getTime();
 		var dt = (thisFrame - this.lastFrame)/1000;
 	        this.lastFrame = thisFrame;
