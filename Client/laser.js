@@ -7,20 +7,25 @@ function Laser() {
     this.Rotation = null;
 	this.Speed = null;
 	this.Pos = {};
-	this.Direction = {};
 	this.Fadeout = LASER_FADEOUT;
 	this.img = null;
+	this.guid;
+	this.PID;
 
-	this.Init = function (/** float */X,/** float */Y, /** float */ dirX, dirY, /** float */ rotation, /** int */ lasertype) {
-		this.Pos.X = X;
-		this.Pos.Y = Y;
-		this.Rotation = rotation;
-		this.Direction.X = dirX;
-		this.Direction.Y = dirY;
-		if (lasertype == 1)
-			this.img = laserimage1;
-		else if (lasertype == 2)
-			this.img = laserimage2;
+	this.Init = function (/** float */X, /** float */Y, /** float */rotation, /** int */lasertype, /** int */guid, /** optional extra time diff */extradt, /** optional player ID */PID) {
+
+	    this.Pos.X = X;
+	    this.Pos.Y = Y;
+	    this.Rotation = rotation;
+	    if (lasertype == 1)
+	        this.img = laserimage1;
+	    else if (lasertype == 2)
+	        this.img = laserimage2;
+	    this.guid = guid;
+
+	    if (PID) this.PID = PID;
+
+	    if (extradt) this.Update(extradt);
 	};
 
 	this.Update = function (/** float */ dt) {
