@@ -119,6 +119,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('hit', function (data) {
 		broadcast('hit', data);
-//		game.Hit(data);
+		game.Hit(data);
 	});
 });

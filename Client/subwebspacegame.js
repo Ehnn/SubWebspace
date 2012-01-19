@@ -9,8 +9,8 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-//SERVER_CONNECTION = "http://localhost:8080";
-SERVER_CONNECTION = "http://10.0.0.4:8080";
+SERVER_CONNECTION = "http://localhost:8080";
+//SERVER_CONNECTION = "http://10.0.0.4:8080";
 //SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
 
 SEND_TIME = 1000 / PACKETS_PER_SECOND;
@@ -99,6 +99,7 @@ function Game() {
     this.lastDataReceiveTime;
 
 	this.pingtime = 0;
+	this.PlayerScore = 0;
 
 	var socket;
 	this.ShotList = [];
@@ -187,7 +188,7 @@ function Game() {
 	    socket.emit('playercreate', { N: name });
 	    socket.on('playercreated', function (data) {
 	        that.Connected = true;
-	        that.myPlayer.Init(1, data.PlayerID);
+	        that.myPlayer.Init(1, data.PlayerID, data.N);
 	        that.GameState = 4;
 
 	        /** Fill player list */
@@ -214,9 +215,9 @@ function Game() {
 	};
 
 	var hitCallback = function (data) {
-	    for (var i in that.Players)
-	        if (that.Players[i].ID == data.ID)
-	            that.Players[i].Hit();
+//	    for (var i in that.Players)
+//	        if (that.Players[i].ID == data.ID)
+//	            that.Players[i].Hit();
 
 	    if (that.myPlayer.ID == data.ID)
 	        that.myPlayer.Hit();
@@ -270,6 +271,7 @@ function Game() {
 	    if (that.myPlayer.Lives <= 0 && that.Connected) {
 	        that.myPlayer.Spawn(200, 200, -90);
 	        socket.emit('spawn', { ID:that.myPlayer.ID, X: 200, Y: 200, R: -90 });
+		that.PlayerScore = 0;
 	        that.GameState = 5;
 	    }
 	};
@@ -303,10 +305,10 @@ function Game() {
 	        for (var i in that.Players) {
 	            var player = that.Players[i];
 
-	            if (player.ID == serverplayerdata.ID) {
-	                player.UpdateData(serverplayerdata, T);
-	                break;
-	            }
+			if (player.ID == serverplayerdata.ID) {
+				player.UpdateData(serverplayerdata, T);
+			        break;
+			}
 	        }
 	    }
 	};
@@ -375,9 +377,12 @@ function Game() {
 	        /** Check collision */
 	        for (var j in that.Players) {
 	            player = that.Players[j];
-	            if (player.ID != that.myPlayer.ID && CheckLaserCollision(player, shot)) {
+	            if (player.Alive && player.ID != that.myPlayer.ID && CheckLaserCollision(player, shot)) {
 	                this.SendHit(player, shot);
 	                player.Hit();
+			this.PlayerScore += 10;
+			if (!player.Alive)
+				this.PlayerScore += 100;
 	                that.myPlayer.Shots.splice(i, 1);
 	            }
 	        }
@@ -426,10 +431,10 @@ function Game() {
 
 	    /** Draw other players */
 	    for (var i in that.Players) {
-            var player = that.Players[i];
-            if (player.ID != that.myPlayer.ID)
-	            player.Draw();
-	    }
+	            var player = that.Players[i];
+	            if (player.ID != that.myPlayer.ID)
+		            player.Draw();
+		    }
 
 	    /** Draw our player */
 	    that.myPlayer.Draw();
@@ -478,7 +483,7 @@ function Game() {
 	    drawMessage("Ping: " + that.pingtime, color, CANVASWIDTH - 130, 30);
 
 	    /** Score */
-	    drawMessage("Score: " + that.myPlayer.Score, "rgba(250, 250, 0, 1)", 30, 30);
+	    drawMessage("Score: " + that.PlayerScore, "rgba(250, 250, 0, 1)", 30, 30);
 	};
 
 	var drawBackbuffer = function () {

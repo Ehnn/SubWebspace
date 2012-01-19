@@ -1,5 +1,6 @@
 FRAMES_PER_SECOND = 30;
-SECONDS_BETWEEN_FRAMES = 1000 / FRAMES_PER_SECOND;
+PACKETS_PER_SECOND = 20;
+MS_BETWEEN_FRAMES = 1000 / FRAMES_PER_SECOND;
 
 CANVASWIDTH = 1024;
 CANVASHEIGHT = 768;
@@ -9,8 +10,13 @@ ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
 SERVER_CONNECTION = "http://localhost:8080";
+//SERVER_CONNECTION = "http://10.0.0.4:8080";
 //SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
-SEND_TIME = 1000;
+
+SEND_TIME = 1000 / PACKETS_PER_SECOND;
+DRAWS_PER_RECEIVE = FRAMES_PER_SECOND / PACKETS_PER_SECOND;
+
+PING_SEND_TIME = 1000;
 
 
 var explosionsound = new Audio();
@@ -77,22 +83,26 @@ function Game() {
 	this.myPlayer = null;
 	this.Asteroids = [];
 	this.AsteroidCreationTimer = 0;
+	
 
-	/** -1 = before game began, 1 = loading resources, 2 = ready to connect, 3 = connecting, 4 = in-game */
+	/** -1 = before game began, 1 = loading resources, 2 = ready to connect, 3 = connecting, 4 = dead, 5 = alive */
 //maybe later add our team wins, their team wins
 	this.GameState = -1;
 
 	this.loaded = false;
 	this.Connected = false;
 	this.gameloop = null;
+	this.pingLoop = null;
 
-        this.lastFrame = new Date().getTime();
-	this.lastSentData = new Date().getTime();
-	this.lastReceivedData = new Date().getTime();
+    this.lastFrame = new Date().getTime();
+    this.lastSentData = new Date().getTime();
+    this.lastDataReceiveTime;
 
 	this.pingtime = 0;
+	this.PlayerScore = 0;
 
 	var socket;
+	this.ShotList = [];
 
 	/** load images and sound */
 	var loadResources = function () {
@@ -102,23 +112,20 @@ function Game() {
 
 	var loadResource = function (name) {
 	    var toload = loadables[name];
-	    if (!toload)
-	    {
-		alert('undefined loadable');
-		return;
+	    if (!toload) {
+	        alert('undefined loadable');
+	        return;
 	    }
-	    
-	    if (toload.type == "sound")
-	    {
-		toload.obj.src = toload.src;
-		toload.obj.preload = "auto";
-		toload.obj.addEventListener('canplaythrough', function () { toload.loaded = true; checkAllLoaded(); }, false);
+
+	    if (toload.type == "sound") {
+	        toload.obj.src = toload.src;
+	        toload.obj.preload = "auto";
+	        toload.obj.addEventListener('canplaythrough', function () { toload.loaded = true; checkAllLoaded(); }, false);
 	    }
-	    
-	    if (toload.type == "image")
-	    {
-		toload.obj.src = toload.src;
-		toload.obj.onload = function () { toload.loaded = true; checkAllLoaded(); };
+
+	    if (toload.type == "image") {
+	        toload.obj.src = toload.src;
+	        toload.obj.onload = function () { toload.loaded = true; checkAllLoaded(); };
 	    }
 	};
 
@@ -149,7 +156,7 @@ function Game() {
 		that.backBufferContext2D = that.backBuffer.getContext('2d');
 	};
 
-	/** Init -> Start -> Connect -> Join */
+	/** Init -> Start -> Connect */
 	/** init buffer, load resources */
 	this.Init = function () {
 		that.GameState = 1;
@@ -162,280 +169,321 @@ function Game() {
 
 	/** bind keys of page, create empty player, start game loop */
 	var Start = function () {
-		jQuery(document).keydown(that.onKeyDown);
-		jQuery(document).keyup(that.onKeyUp);
-		that.GameState = 2;
+	    jQuery(document).keydown(that.onKeyDown);
+	    jQuery(document).keyup(that.onKeyUp);
+	    that.GameState = 2;
 
-		that.myPlayer = new Player();
+	    that.myPlayer = new Player();
+	    that.myPlayer.isMyPlayer = true;
 
-		/** Game loop */
-	        that.gameloop = setInterval(function() { that.GameLoop(); }, SECONDS_BETWEEN_FRAMES);
+	    /** Game loop */
+	    that.gameloop = setInterval(function () { that.GameLoop(); }, MS_BETWEEN_FRAMES);
 	};
-
+    //FIX
 	var Connect = function () {
-		//connect
-		that.GameState = 3;
-		socket = io.connect(SERVER_CONNECTION);
-		socket.on("clientaccepted", function (data) {
-			Ping(10, function () {
-				that.Connected = true;
-				that.myPlayer.Init(1, data.PlayerID);
-				that.GameState = 4;
-				socket.on("gamedata", that.ReceiveData);
-				Join();	
-			});
-		});
+	    //connect
+	    that.GameState = 3;
+	    socket = io.connect(SERVER_CONNECTION);
+	    //FIX name
+	    socket.emit('playercreate', { N: name });
+	    socket.on('playercreated', function (data) {
+	        that.Connected = true;
+	        that.myPlayer.Init(1, data.PlayerID, data.N);
+	        that.GameState = 4;
+
+	        /** Fill player list */
+	        that.Players = [];
+	        for (var i in data.P) {
+	            var player = data.P[i];
+	            var newplayer = new Player();
+	            newplayer.Init(2, player.ID, player.N);
+                if (player.L)
+	                newplayer.Spawn(player.X, player.Y, player.R);
+	            newplayer.Lives = player.L;
+	            that.Players.push(newplayer);
+	        }
+
+	        socket.on("gamedata", that.ReceiveData);
+	        socket.on("serverping", pingCallback);
+	        socket.on('spawn', spawnCallback);
+	        socket.on('addplayer', connectCallback);
+	        socket.on('removeplayer', disconnectCallback);
+	        socket.on('hit', hitCallback);
+
+	        that.pingLoop = setInterval(Ping, PING_SEND_TIME);
+	    });
 	};
 
-	var Ping = function (totalPings, callback) {
-		var pingtimes = [];
-		socket.emit("clientping", { clientping:new Date().getTime() });
-		socket.on("serverping", function (data) {
-			var newtime = new Date().getTime();
-			pingtimes.push((newtime - data.clientping) / 2);
-			if (totalPings > 0)
-			{
-				socket.emit("clientping", { clientping:new Date().getTime() });
-				totalPings--;
-			}
-			else
-			{
-				var lowest = pingtimes[0], highest = pingtimes[0], avg = 0;
-				for (var i in pingtimes) {
-					var time = pingtimes[i];
-					if (time > highest) highest = time;
-					if (time < lowest) lowest = time;
-					avg += time;
-				}
-				that.pingtime = (avg - highest - lowest) / (pingtimes.length - 2);
-				if (callback) callback();
-			}
-		});
+	var hitCallback = function (data) {
+//	    for (var i in that.Players)
+//	        if (that.Players[i].ID == data.ID)
+//	            that.Players[i].Hit();
+
+	    if (that.myPlayer.ID == data.ID)
+	        that.myPlayer.Hit();
+
+	    for (var i in that.ShotList) {
+	        var shot = that.ShotList[i];
+	        if (shot.PID == data.PID && shot.guid == data.SID)
+	            that.ShotList.splice(i, 1);
+	    }
+	};
+
+	var spawnCallback = function (data) {
+	    for (var i in that.Players)
+            if (that.Players[i].ID == data.ID)
+                that.Players[i].Spawn(data.X, data.Y, data.R);
+	};
+
+	var connectCallback = function (data) {
+	    if (PlayerExists(data.ID)) return;
+
+	    var enemyplayer = new Player();
+	    enemyplayer.Init(2, data.ID, data.N);
+	    that.Players.push(enemyplayer);
+	};
+
+	var PlayerExists = function (ID) {
+	    for (var i in that.Players)
+	        if (that.Players[i].ID == ID)
+	            return true;
+	    return false;
+	};
+
+	var disconnectCallback = function (data) {
+	    for (var i in that.Players)
+	        if (that.Players[i].ID == data.ID) {
+	            that.Players.splice(i, 1);
+	            break;
+	        }
+	};
+
+	var pingCallback = function (data) {
+	    var newtime = new Date().getTime();
+	    that.pingtime = (newtime - data.clientping) / 2;
+	};
+
+	var Ping = function () {
+	    socket.emit("clientping", { clientping: new Date().getTime() });
 	};
 
 	var Join = function () {
-		//join yourself to the running game
-		if (!that.myPlayer.Alive && that.Connected)
-		{
-			that.myPlayer.Spawn(200, 200, -90);
-		}
+	    if (that.myPlayer.Lives <= 0 && that.Connected) {
+	        that.myPlayer.Spawn(200, 200, -90);
+	        socket.emit('spawn', { ID:that.myPlayer.ID, X: 200, Y: 200, R: -90 });
+		that.PlayerScore = 0;
+	        that.GameState = 5;
+	    }
 	};
 
 	this.GameLoop = function () {
-		var thisFrame = new Date().getTime();
-		var dt = (thisFrame - this.lastFrame)/1000;
-	        this.lastFrame = thisFrame;
+	    var thisFrame = new Date().getTime();
+	    var dt = (thisFrame - this.lastFrame) / 1000;
+	    this.lastFrame = thisFrame;
 
-		this.Update(dt);
+	    this.Update(dt);
 
-		if (socket)
-			this.SendData(dt);
-		Draw();
+	    if (socket) {
+	        this.SendData(dt);
+	    }
+	    Draw();
 	};
 
-	this.ReceiveData = function (data) {
-		this.lastReceivedData = new Date().getTime();
+	this.ReceiveData = function (data, Shots, T) {
+	    that.lastDataReceiveTime = new Date().getTime();
 
-		for (var i in this.Players)
-		{
-			var player = this.Players[i];
-			player.updated = false;
-		}
+	    for (var j in Shots) {
+	        var shot = Shots[j];
+	        var newshot = new Laser();
+	        newshot.Init(shot.P.X, shot.P.Y, shot.R, 2, shot.ID, /* T */null, shot.PID);
+	        newshot.Fadeout = shot.F;
+	        that.ShotList.push(newshot);
+	    }
 
-		for (var i in data) {
-			playerdata = data[i];
-/*			if (that.myPlayer.ID == playerdata.ID)
-			{
-//				that.myPlayer.UpdateData(playerdata);
-				break;
-			}*/
-		}
+	    for (var j in data) {
+	        var serverplayerdata = data[j];
+	        for (var i in that.Players) {
+	            var player = that.Players[i];
 
-		for (var j in data) {
-			var found = false;
-			var serverplayerdata = data[j];
-			for (var i in that.Players) {
-				var player = that.Players[i];
-
-				if (player.ID == serverplayerdata.ID) {
-					player.updated = true;
-					player.UpdateData(serverplayerdata);
-					found = true;
-					break;
-				}
+			if (player.ID == serverplayerdata.ID) {
+				player.UpdateData(serverplayerdata, T);
+			        break;
 			}
-			
-			if (!found) {
-				var enemyplayer = new Player();
-				enemyplayer.Init(2, serverplayerdata.ID);
-				enemyplayer.UpdateData(serverplayerdata);
-				that.Players.push(enemyplayer);
-			}
-		}
-
-		for (var i in this.Players)
-			if (!this.Players[i].updated)
-				this.Players.splice(i, 1);
-	};
-
-	var debugobj = function (text) {
-		var test = jQuery("<div />").text(text).appendTo(jQuery(document.body));
+	        }
+	    }
 	};
 
 	this.SendData = function (dt) {
-		var now = new Date().getTime();
+	    var now = new Date().getTime();
 
-		if (now - this.lastSentData > SEND_TIME)
-		{
-			this.lastSentData = new Date().getTime();
-			var actions = {
-				rightKeyPressTime : rightKeyPressTime,
-				leftKeyPressTime : leftKeyPressTime,
-				upKeyPressTime : upKeyPressTime,
-				downKeyPressTime : downKeyPressTime,
-				spaceKeyPressTime : spaceKeyPressTime,
-				ID: that.myPlayer.ID
-			};
+	    if (now - this.lastSentData > SEND_TIME) {
+	        this.lastSentData = new Date().getTime();
 
-			socket.emit("clientdata", actions);//{ rightKeyPressTime:rightKeyPressTime, that.myPlayer);
+	        var d = {
+	            P: this.myPlayer.Pos,
+	            R: this.myPlayer.Rotation,
+	            ID: that.myPlayer.ID
+	        };
 
-			rightKeyPressTime = 0;
-			leftKeyPressTime = 0;
-			upKeyPressTime = 0;
-			downKeyPressTime = 0;
-			spaceKeyPressTime = 0;
-		}
+	        socket.emit("clientdata", d);
+	    }
 	};
 
-	this.Update = function (/** time diff */ dt) {
-		//FIX to a better check
-		/** player input */
-		if (p1rightKey) {
-			this.myPlayer.Rotating = 1;
-			rightKeyPressTime += dt;			
-		}
-		else if (p1leftKey) {
-			this.myPlayer.Rotating = -1;
-			leftKeyPressTime += dt;
-		}
-		else this.myPlayer.Rotating = 0;
+	this.SendShot = function (shot) {
+	    socket.emit("fire", { PID: that.myPlayer.ID, P: shot.Pos, R: shot.Rotation, ID: shot.guid, F:shot.Fadeout });
+	};
 
-		if (p1upKey) {
-			upKeyPressTime += dt;
-			this.myPlayer.Accelerating = 1;
-		}
-		else if (p1downKey) {
-			downKeyPressTime += dt;
-			this.myPlayer.Accelerating = -1;
-		}
-		else this.myPlayer.Accelerating = 0;
+	this.SendHit = function (player, shot) {
+	    socket.emit('hit', { ID: player.ID, SID: shot.guid, PID: this.myPlayer.ID });
+	};
 
-		if (p1spaceKey) {
-			spaceKeyPressTime += dt;
-			this.myPlayer.Shooting = true;
-		}
-		else this.myPlayer.Shooting = false;
+	this.Update = function (/** time diff */dt) {
+	    //FIX to a better check
+	    /** player input */
+	    if (p1rightKey && p1leftKey) this.myPlayer.Rotating = 0;
+	    else if (p1rightKey) this.myPlayer.Rotating = 1;
+	    else if (p1leftKey) this.myPlayer.Rotating = -1;
+	    else this.myPlayer.Rotating = 0;
 
-		/** Update our player */
-		this.myPlayer.Update(dt);
+	    if (p1upKey && p1downKey) this.myPlayer.Accelerating = 0;
+	    else if (p1upKey) this.myPlayer.Accelerating = 1;
+	    else if (p1downKey) this.myPlayer.Accelerating = -1;
+	    else this.myPlayer.Accelerating = 0;
 
-		/** Update our shots */
-		for (var i in this.myPlayer.Shots)
-		{
-			var shot = this.myPlayer.Shots[i];
-			shot.Update(dt);
-			if (shot.Fadeout <= 0) this.myPlayer.Shots.splice(i, 1);
-		}
+	    if (p1spaceKey) this.myPlayer.Shooting = true;
+	    else this.myPlayer.Shooting = false;
 
-		/** Update players */
-		for (var i in this.Players)
-		{
-			var player = this.Players[i];
+	    /** Update our player */
+	    this.myPlayer.Update(dt);
 
-//			if (player.ID != this.myPlayer.ID)
-			{
-				player.Update(dt);
-				for (var shot in player.shots)
-					shot.Update(dt);
-			}
-		}
+	    /** Update our shots */
+	    for (var i in this.myPlayer.Shots) {
+	        var shot = this.myPlayer.Shots[i];
+	        shot.Update(dt);
+	        if (shot.Fadeout <= 0) this.myPlayer.Shots.splice(i, 1);
+	    }
 
-		/** Update asteroids */
-		for (var i in this.Asteroids)
-		{
-			var asteroid = this.Asteroids[i];
-			asteroid.Update(dt);
-		}
+	    /** Update shot list */
+	    for (var i in that.ShotList) {
+	        var shot = that.ShotList[i];
+	        //if (shot.PID != myPlayer.ID) {
+	        shot.Update(dt);
+	        if (shot.Fadeout <= 0) that.ShotList.splice(i, 1);
+	        //}
+	    }
+
+	    for (var i in that.myPlayer.Shots) {
+	        var shot = that.myPlayer.Shots[i];
+	        /** Check collision */
+	        for (var j in that.Players) {
+	            player = that.Players[j];
+	            if (player.ID != that.myPlayer.ID && CheckLaserCollision(player, shot)) {
+	                this.SendHit(player, shot);
+	                player.Hit();
+			this.PlayerScore += 10;
+			if (!player.Alive)
+				this.PlayerScore += 100;
+	                that.myPlayer.Shots.splice(i, 1);
+	            }
+	        }
+	    }
+
+	    /** Update players */
+	    for (var i in this.Players)
+	        this.Players[i].Update(dt);
+
+	    /** Update asteroids */
+	    for (var i in this.Asteroids) {
+	        var asteroid = this.Asteroids[i];
+	        asteroid.Update(dt);
+	    }
+	};
+
+    var CheckLaserCollision = function (/** player */ ship, /** shot */ shot) {
+		if (shot.Pos.X <= ship.Pos.X + ship.collisionWidth &&
+			shot.Pos.X >= ship.Pos.X - ship.collisionWidth &&
+			shot.Pos.Y <= ship.Pos.Y + ship.collisionHeight &&
+			shot.Pos.Y >= ship.Pos.Y - ship.collisionHeight)
+			return true;
+
+		return false;
 	};
 
 	var Draw = function () {
-		/** clear backbuffer */
-		that.backBufferContext2D.clearRect(0, 0, that.backBuffer.width, that.backBuffer.height);
+	    /** clear backbuffer */
+	    that.backBufferContext2D.clearRect(0, 0, that.backBuffer.width, that.backBuffer.height);
 
-		/** Draw shots */
-		for (var i in that.Players)
-		{
-			var player = that.Players[i];
+	    /** Draw shot list */
+	    for (var i in that.ShotList) {
+	        var shot = that.ShotList[i];
+	        if (shot.PID != that.myPlayer.ID) {
+	            shot.Draw();
+	        }
+	    }
 
-			for (var j in that.Players[i].Shots)
-			{
-				var shot = that.Players[i].Shots[j];
-				shot.Draw();
-			}
-		}
+	    /** draw our shots */
+	    for (var i in that.myPlayer.Shots)
+	        that.myPlayer.Shots[i].Draw();
 
-		/** draw our shots */
-		for (var i in that.myPlayer.Shots)
-			that.myPlayer.Shots[i].Draw();
-		
-		/** Draw asteroids */
-		for (var i in that.Asteroids)
-			that.Asteroids[i].Draw();
+	    /** Draw asteroids */
+	    for (var i in that.Asteroids)
+	        that.Asteroids[i].Draw();
 
-		/** Draw other players */
-		for (var i in that.Players)
-			that.Players[i].Draw();
+	    /** Draw other players */
+	    for (var i in that.Players) {
+	            var player = that.Players[i];
+	            if (player.ID != that.myPlayer.ID)
+		            player.Draw();
+		    }
 
-		/** Draw our player */
-		that.myPlayer.Draw();
+	    /** Draw our player */
+	    that.myPlayer.Draw();
 
-		switch (that.GameState)
-		{
-			/** loading resources */
-			case 1:
-				drawInstructions();
-				drawMessage("Loading Resources...");
-				break;
-			/** ready to connect */
-			case 2:
-				drawInstructions();
-				drawMessage("Press Enter to connect");
-				break;
-			/** ready to connect */
-			case 3:
-				drawInstructions();
-				drawMessage("Connecting....");
-				break;
-			/** in-game */
-			case 4:
-				//for debugging
-				if (that.myPlayer.Alive)				
-					drawMessage("Alive");
-				else
-					drawMessage("Dead");
-				drawHUD();
-				break;
-			break;
-		}
-		drawBackbuffer();
+	    switch (that.GameState) {
+	        /** loading resources */ 
+	        case 1:
+	            drawInstructions();
+	            drawMessage("Loading Resources...");
+	            break;
+	        /** ready to connect */ 
+	        case 2:
+	            drawInstructions();
+	            drawMessage("Press Enter to connect");
+	            break;
+	        /** ready to connect */ 
+	        case 3:
+	            drawInstructions();
+	            drawMessage("Connecting....");
+	            break;
+	        /** in-game */ 
+	        case 4:
+	            drawHUD();
+	            drawMessage("Press Enter to join");
+	            break;
+	        case 5:
+	            drawHUD();
+	            break;
+	    }
+	    drawBackbuffer();
 	};
 
 	var drawHUD = function () {
-		//health, allies, enemies, map, ping
-		that.backBufferContext2D.fillStyle = "rgba(0,0,200, 0.4)";
-		that.backBufferContext2D.fillRect (CANVASWIDTH / 2 - 150, CANVASHEIGHT - 50 , 30 * that.myPlayer.Lives, 40);
-		that.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
-		that.backBufferContext2D.strokeRect(CANVASWIDTH / 2 - 150, CANVASHEIGHT - 50 , 300, 40);
+	    //health, allies, enemies, map, ping
+	    /** health bar */
+	    that.backBufferContext2D.fillStyle = "rgba(0,0,200, 0.4)";
+	    that.backBufferContext2D.fillRect(CANVASWIDTH / 2 - 150, 30, 30 * that.myPlayer.Lives, 40);
+	    that.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
+	    that.backBufferContext2D.strokeRect(CANVASWIDTH / 2 - 150, 30, 300, 40);
+
+	    /** Ping */
+	    var color;
+	    if (that.pingtime >= 200) color = "rgba(250, 0, 0, 1)";
+	    else if (that.pingtime <= 200 && that.pingtime >= 100) color = "rgba(250, 250, 0, 1)";
+	    else if (that.pingtime <= 100) color = "rgba(0, 250, 0, 1)";
+	    drawMessage("Ping: " + that.pingtime, color, CANVASWIDTH - 130, 30);
+
+	    /** Score */
+	    drawMessage("Score: " + that.PlayerScore, "rgba(250, 250, 0, 1)", 30, 30);
 	};
 
 	var drawBackbuffer = function () {
@@ -443,9 +491,10 @@ function Game() {
 		that.context2D.drawImage(that.backBuffer, 0, 0);
 	};
 
-	var drawMessage = function (/** string */ text, /** string */ color, /** int */ posX, /** int */ posY) {
+    var drawMessage = function (/** string */text, /** string */color, /** int */posX, /** int */posY, /** string */font) {
+        that.backBufferContext2D.font = font || "bold 30px sans-serif";
 		that.backBufferContext2D.fillStyle = color || "White";
-		that.backBufferContext2D.fillText(text, posX || (CANVASWIDTH / 2 - 150), posY || (CANVASHEIGHT - 100));		
+		that.backBufferContext2D.fillText(text, posX || (CANVASWIDTH / 2 - 150), posY || (CANVASHEIGHT - 100));
 	};
 
 	var drawInstructions = function () {
@@ -461,37 +510,35 @@ function Game() {
 	};
 
 	var p1rightKey = false;
-	var rightKeyPressTime = 0;
 	var p1leftKey = false;
-	var leftKeyPressTime = 0;
 	var p1upKey = false;
-	var upKeyPressTime = 0;
 	var p1downKey = false;
-	var downKeyPressTime = 0;
 	var p1spaceKey = false;
-	var spaceKeyPressTime = 0;
 
 	var enter = false;
-    
+
 
 	this.onKeyDown = function (evt) {
-		if (evt.keyCode == 39) p1rightKey = true;
-		else if (evt.keyCode == 37) p1leftKey = true;
-		if (evt.keyCode == 38) p1upKey = true;
-		else if (evt.keyCode == 40) p1downKey = true;
-		if (evt.keyCode == 32) p1spaceKey = true;
+	    if (evt.keyCode == 39) p1rightKey = true;
+	    else if (evt.keyCode == 37) p1leftKey = true;
+	    if (evt.keyCode == 38) p1upKey = true;
+	    else if (evt.keyCode == 40) p1downKey = true;
+	    if (evt.keyCode == 32) p1spaceKey = true;
 
-		if (evt.keyCode == 68) p2rightKey = true;
-		else if (evt.keyCode == 65) p2leftKey = true;
-		if (evt.keyCode == 87) p2upKey = true;
-		else if (evt.keyCode == 83) p2downKey = true;
-		if (evt.keyCode == 16) p2spaceKey = true;
+	    if (evt.keyCode == 68) p2rightKey = true;
+	    else if (evt.keyCode == 65) p2leftKey = true;
+	    if (evt.keyCode == 87) p2upKey = true;
+	    else if (evt.keyCode == 83) p2downKey = true;
+	    if (evt.keyCode == 16) p2spaceKey = true;
 
-		if (evt.keyCode == 13)
-		{
-			if (!that.Connected)
-				Connect();
-		}
+	    if (evt.keyCode == 13) {
+	        if (!that.Connected) {
+	            Connect();
+	        }
+	        else if (that.GameState == 4) {
+	            Join();
+	        }
+	    }
 	}
 
 	this.onKeyUp = function (evt) {

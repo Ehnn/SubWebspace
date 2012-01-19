@@ -19,6 +19,7 @@
 		<div id="explosiondiv1" class="explosiondiv invis"></div>
 		<div id="explosiondiv2" class="explosiondiv invis"></div>
         Sound <input type="checkbox" checked="checked" />
+	<input type="button" text="POST" onclick="postscore()">
 	</div>
 <script src="socket.io.js"></script>
 <script src="jquery.min.js"></script>
@@ -27,6 +28,18 @@
 <script src="laser.js"></script>
 <script src="subwebspacegame.js"></script>
 <script src="asteroid.js"></script>
+
+
+<script>
+
+var postscore = function() {
+	data = {
+		Score:50
+	};
+	jQuery.post("http://url.com", data, function () { alert('success'); }).error(function () { alert('error'); });
+};
+
+</script>
 
 <!--<script src="subwebspaceclient.js"></script>-->
 

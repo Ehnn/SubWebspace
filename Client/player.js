@@ -42,7 +42,6 @@ function Player() {
 
 	this.isMyPlayer = false;
 	this.name = null;
-	this.Score = 0;
 
 	this.collisionWidth = 20;
 	this.collisionHeight = 20;
@@ -179,6 +178,9 @@ function Player() {
 	    setTimeout(function () {
 	        explosion.addClass("invis");
 	    }, 750);
+
+		if (this.isMyPlayer)
+			game.GameState = 4;
 	};
 
 	this.Draw = function () {
