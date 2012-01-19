@@ -26,13 +26,12 @@ function Game() {
 
 	this.lastFrame = new Date().getTime();
 	this.tick = 0;
-	this.gamestarttime = 0;
+	this.ticktime = SECONDS_BETWEEN_FRAMES;
 
 	this.Init = function () {
 	};
 
 	this.Start = function () {
-		this.gamestarttime = new Date().getTime();
 		this.tick = 0;
 		that.GameState = 0;
 
@@ -47,7 +46,7 @@ function Game() {
 	};
 
 	this.GameLoop = function () {
-		that.tick++;
+		this.tick++;
 		var thisFrame = new Date().getTime();
 		var dt = (thisFrame - this.lastFrame)/1000;
 	        this.lastFrame = thisFrame;
@@ -63,7 +62,7 @@ function Game() {
 			CreateAsteroid(3);
 		}*/
 
-		for (var i in this.Players)
+		/*for (var i in this.Players)
 		{
 			var player = this.Players[i];
 
@@ -72,7 +71,7 @@ function Game() {
 			{
 				var shot = player.Shots[j];
 
-				shot.Update(dt);
+				//shot.Update(dt);
 
 				//FIX when teams are in, only check on enemies
 				for (var k in this.Players)
@@ -92,7 +91,7 @@ function Game() {
 
 				if (shot.Fadeout <= 0) DestroyShot(player, i);
 			}
-		}
+		}*/
 
 /*
 		for (var i in this.Asteroids) {
@@ -155,11 +154,25 @@ function Game() {
 		return false;
 	};
 
-	this.CreatePlayer = function (/** int */ id) {
+	this.CreatePlayer = function (/** int */ id, /** string */ name) {
 		var player = playerfile.CreatePlayer();
-		player.Init(1, id);
-		player.Spawn(200, 200, -90);
+		if (!name) name = "Guest" + id;
+		player.Init(1, id, name);
 		this.Players.push(player);
+
+		return name;
+	};
+
+	this.Spawn = function (data) {
+		for (var i in this.Players)
+			if (this.Players[i].ID == data.ID)
+				this.Players[i].Spawn(data.X || 200, data.Y || 200, data.R || -90);
+	};
+
+	this.Hit = function (data) {
+		for (var i in this.Players)
+			if (this.Players[i].ID == data.ID)
+				this.Players[i].Lives--;
 	};
 	
 	this.RemovePlayer = function (/** int */ id) {
@@ -171,7 +184,7 @@ function Game() {
 	this.UpdatePlayerActions = function (/** client player data */ playerdata) {
 		for (var i in this.Players) {
 			if (this.Players[i].ID == playerdata.ID)
-				this.Players[i].UpdateActions(playerdata);
+				this.Players[i].UpdateData(playerdata);
 		}
 	};
 }
