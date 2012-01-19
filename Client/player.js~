@@ -42,7 +42,6 @@ function Player() {
 
 	this.isMyPlayer = false;
 	this.name = null;
-	this.Score = 0;
 
 	this.collisionWidth = 20;
 	this.collisionHeight = 20;

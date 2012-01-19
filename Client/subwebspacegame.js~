@@ -377,9 +377,8 @@ function Game() {
 	        /** Check collision */
 	        for (var j in that.Players) {
 	            player = that.Players[j];
-	            if (player.ID != that.myPlayer.ID && CheckLaserCollision(player, shot)) {
+	            if (player.Alive && player.ID != that.myPlayer.ID && CheckLaserCollision(player, shot)) {
 	                this.SendHit(player, shot);
-	                player.Hit();
 			this.PlayerScore += 10;
 			if (!player.Alive)
 				this.PlayerScore += 100;
@@ -502,11 +501,16 @@ function Game() {
 		that.backBufferContext2D.font = "bold 30px sans-serif";
 		that.backBufferContext2D.width = 3;
 
-		that.backBufferContext2D.strokeStyle = "LightBlue";
-		that.backBufferContext2D.strokeText("Controls: Arrow keys + Space", 200, CANVASHEIGHT / 2);
+//		that.backBufferContext2D.strokeStyle = "LightBlue";
+//		that.backBufferContext2D.strokeText("Controls: Arrow keys + Space", 200, CANVASHEIGHT / 2);
 
-		that.backBufferContext2D.fillStyle = "White";
-		that.backBufferContext2D.fillText("Instructions: kill the enemy. avoid the asteroids. duh.", CANVASWIDTH / 2 - 360, CANVASHEIGHT / 4);
+		that.backBufferContext2D.fillStyle = "Orange";
+		that.backBufferContext2D.fillText("Instructions:", 100, CANVASHEIGHT / 4);
+		that.backBufferContext2D.fillText("Multiplayer game. Kill the enemies.", 160, CANVASHEIGHT / 4 + 50);
+		that.backBufferContext2D.fillText("Lasers pass through edges.", 160, CANVASHEIGHT / 4 + 100);
+
+		that.backBufferContext2D.strokeStyle = "LightBlue";
+		that.backBufferContext2D.strokeText("Controls: Arrow Keys + Space.", 160, CANVASHEIGHT / 4 + 180);
 	};
 
 	var p1rightKey = false;

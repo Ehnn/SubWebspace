@@ -18,7 +18,7 @@ game.Start();
 //game.Players[0].Shoot();
 
 
-var PlayerCount = 0;
+var PlayerCount = 1;
 var Sockets = [];
 
 console.log("Starting senddata interval");

@@ -87,7 +87,7 @@ io.sockets.on('connection', function (socket) {
 				});
 		}
 
-		socket.emit('playercreated', { PlayerID:socket.PlayerID, tick:game.tick, ticktime:game.ticktime, P: players });
+		socket.emit('playercreated', { PlayerID:socket.PlayerID, tick:game.tick, ticktime:game.ticktime, P: players, N:name });
 		broadcast('addplayer', { ID: socket.PlayerID, N:name });
 	});
 
