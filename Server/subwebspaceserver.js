@@ -1,10 +1,8 @@
 UPDATES_PER_SECOND = 20;
 UPDATE_TIME_BETWEEN_SENDS = 1000 / UPDATES_PER_SECOND;
 
-
-
-
 var spacegame = require('./subwebspacegame');
+var email = require('mailer');
 
 var io = require('socket.io').listen(8080);
 
@@ -13,10 +11,6 @@ var game = spacegame.MakeGame();
 console.log("Starting game");
 game.Init();
 game.Start();
-//game.Init();
-//game.CreateNewPlayer();
-//game.Players[0].Shoot();
-
 
 var PlayerCount = 1;
 var Sockets = [];
@@ -38,11 +32,6 @@ var SendData = function () {
 			N: player.name
 };
 
-/*		for (var j in player.Shots) {
-			var shot = player.Shots[j];
-			obj.S.push({ P:shot.Pos, R:shot.Rot});
-		}*/
-
 		players.push(obj);
 	}
 
@@ -62,7 +51,6 @@ var broadcast = function (event, data1, data2, data3) {
 var ShotsFired = [];
 
 setInterval(SendData, UPDATE_TIME_BETWEEN_SENDS);
-
 
 io.sockets.on('connection', function (socket) {
 	socket.PlayerID = PlayerCount++;

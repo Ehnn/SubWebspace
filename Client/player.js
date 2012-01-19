@@ -179,8 +179,10 @@ function Player() {
 	        explosion.addClass("invis");
 	    }, 750);
 
-		if (this.isMyPlayer)
+		if (this.isMyPlayer) {
 			game.GameState = 4;
+			
+		}
 	};
 
 	this.Draw = function () {
@@ -195,7 +197,7 @@ function Player() {
 	            game.backBufferContext2D.fillStyle = "White";
 	            game.backBufferContext2D.fillText(this.name || "No Name", -img.width / 2, -img.height / 2 - 10);
 
-	            game.backBufferContext2D.fillStyle = "rgba(255, 0, 0, 0.8)";
+	            game.backBufferContext2D.fillStyle = this.isMyPlayer ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)";
 	            game.backBufferContext2D.fillRect(-img.width / 2, -img.height / 2, 5 * this.Lives, 5);
 	            game.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
 	            game.backBufferContext2D.strokeRect(-img.width / 2, -img.height / 2, 50, 5);

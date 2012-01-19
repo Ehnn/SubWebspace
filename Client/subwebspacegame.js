@@ -9,9 +9,9 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-SERVER_CONNECTION = "http://localhost:8080";
+//SERVER_CONNECTION = "http://localhost:8080";
 //SERVER_CONNECTION = "http://10.0.0.4:8080";
-//SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
 
 SEND_TIME = 1000 / PACKETS_PER_SECOND;
 DRAWS_PER_RECEIVE = FRAMES_PER_SECOND / PACKETS_PER_SECOND;
@@ -469,7 +469,7 @@ function Game() {
 	var drawHUD = function () {
 	    //health, allies, enemies, map, ping
 	    /** health bar */
-	    that.backBufferContext2D.fillStyle = "rgba(0,0,200, 0.4)";
+	    that.backBufferContext2D.fillStyle = "rgba(0,250,0, 0.4)";
 	    that.backBufferContext2D.fillRect(CANVASWIDTH / 2 - 150, 30, 30 * that.myPlayer.Lives, 40);
 	    that.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
 	    that.backBufferContext2D.strokeRect(CANVASWIDTH / 2 - 150, 30, 300, 40);
@@ -509,8 +509,8 @@ function Game() {
 		that.backBufferContext2D.fillText("Multiplayer game. Kill the enemies.", 160, CANVASHEIGHT / 4 + 50);
 		that.backBufferContext2D.fillText("Lasers pass through edges.", 160, CANVASHEIGHT / 4 + 100);
 
-		that.backBufferContext2D.strokeStyle = "Orange";
-		that.backBufferContext2D.strokeText("Controls: Arrow Keys + Space.", 160, CANVASHEIGHT / 4 + 180);
+//		that.backBufferContext2D.strokeStyle = "Orange";
+		that.backBufferContext2D.fillText("Use the Arrow Keys to move, Space to shoot.", 160, CANVASHEIGHT / 4 + 180);
 	};
 
 	var p1rightKey = false;

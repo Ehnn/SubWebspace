@@ -4,8 +4,9 @@
 		canvas, img {display:block;margin:1em auto; border:1px solid black;}
 		canvas { z-index:2;position:absolute;background:url(space.jpg) }
 		.explosiondiv { z-index:60;position:absolute;left:100px; background-image: url(explosion1.gif); height: 139px; width: 100px;}
-		.canvas-wrap {position:relative;merging:0 auto; width:800; height:600}
+		.canvas-wrap {position:relative;merging:0 auto;left:50%;margin-left:-512; width:800; height:600}
 		.invis { display: none}
+		.signup { position:absolute;z-index:10; background-Color:White; left:50%; top:20%; width:400px; height:300px; }
 	</style>
 	<title>Adam Zeira and Shirly Biniashvili</title>
 </head>
@@ -29,18 +30,28 @@
 <script src="subwebspacegame.js"></script>
 <script src="asteroid.js"></script>
 
+<div class="signup">
+TEXT TEXT
+<form>
 
+</form>
+</div>
 <script>
-
+var t = true;
 var postscore = function() {
 	data = {
 		Score:50
 	};
-	jQuery.post("http://url.com", data, function () { alert('success'); }).error(function () { alert('error'); });
+
+	alert(jQuery("<div />").dialog);
+	if (t)
+		jQuery(".signup").fadeOut('slow', function() {  });
+	else
+		jQuery(".signup").fadeIn('slow', function() { });
+
+	t = !t;
+//	jQuery.post("http://url.com", data, function () { alert('success'); }).error(function () { alert('error'); });
 };
 
 </script>
-
-<!--<script src="subwebspaceclient.js"></script>-->
-
 </body></html>
