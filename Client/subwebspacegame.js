@@ -183,7 +183,7 @@ function Game() {
 			showSignup();
 		}
 		else
-			showSavescore();
+			showSaveScore();
 	};
 
 	this.saveScore = function (name) {
