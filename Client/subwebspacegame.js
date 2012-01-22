@@ -172,14 +172,13 @@ function Game() {
 	};
 
 	this.myPlayerDeath = function () {
-		game.GameState = 4;
+	    game.GameState = 4;
 
-		/** Offer the player to sign up */
-		if (!this.hascookie && !this.offeredsignup) {
-			this.offeredsignup = true;
-			jQuery("#signup").dialog('open');
-			jQuery("#signup").find("#namefield").val(this.myPlayer.name);
-		}
+	    /** Offer the player to sign up */
+	    if (!this.hascookie && !this.offeredsignup) {
+	        this.offeredsignup = true;
+	        showSignup();
+	    }
 	};
 
 	/** bind keys of page, create empty player, start game loop */
@@ -192,14 +191,12 @@ function Game() {
 	    that.myPlayer.isMyPlayer = true;
 
 		/** Get cookies player name */
-		if (document.cookie) {
-			var splitvars = document.cookie.split(';');
-			for (var i in splitvars) {
-				var pair = splitvars[i].split('=');
-				if (pair[0] == "name") {
-					that.hascookie = true;
-					that.myPlayer.name = pair[1];
-				}
+		var splitcookies = document.cookie.split(';');
+		for (var i in splitcookies) {
+		    var pair = splitcookies[i].split('=');
+			if (pair[0] == "name") {
+				that.hascookie = true;
+				that.myPlayer.name = pair[1];
 			}
 		}
 
@@ -258,9 +255,9 @@ function Game() {
 	};
 
 	var spawnCallback = function (data) {
-	    for (var i in that.Players)
-            if (that.Players[i].ID == data.ID)
-                that.Players[i].Spawn(data.X, data.Y, data.R);
+	    var index = GetPlayerIndex(data.ID);
+	    if (index != -1)
+	        that.Players[index].Spawn(data.X, data.Y, data.R);
 	};
 
 	var connectCallback = function (data) {
@@ -286,11 +283,9 @@ function Game() {
 	};
 
 	var disconnectCallback = function (data) {
-	    for (var i in that.Players)
-	        if (that.Players[i].ID == data.ID) {
-	            that.Players.splice(i, 1);
-	            break;
-	        }
+	    var index = GetPlayerIndex(data.ID);
+        if (index != -1)
+	        that.Players.splice(index, 1);
 	};
 
 	var pingCallback = function (data) {
@@ -471,10 +466,10 @@ function Game() {
 
 	    /** Draw other players */
 	    for (var i in that.Players) {
-	            var player = that.Players[i];
-	            if (player.ID != that.myPlayer.ID)
-		            player.Draw();
-		    }
+	        var player = that.Players[i];
+	        if (player.ID != that.myPlayer.ID)
+	            player.Draw();
+	    }
 
 	    /** Draw our player */
 	    that.myPlayer.Draw();
@@ -495,15 +490,18 @@ function Game() {
 	            drawInstructions();
 	            drawMessage("Connecting....");
 	            break;
-	        /** in-game */ 
+	        /** in-game */
 	        case 4:
+	            drawHighScores();
 	            drawHUD();
 	            drawMessage("Press Enter to join");
 	            break;
 	        case 5:
+	            
 	            drawHUD();
 	            break;
 	    }
+
 	    drawBackbuffer();
 	};
 
@@ -524,6 +522,9 @@ function Game() {
 
 	    /** Score */
 	    drawMessage("Score: " + that.PlayerScore, "rgba(250, 250, 0, 1)", 30, 30);
+
+        /** player list */
+	    drawPlayersList();
 	};
 
 	var drawBackbuffer = function () {
@@ -534,7 +535,7 @@ function Game() {
     var drawMessage = function (/** string */text, /** string */color, /** int */posX, /** int */posY, /** string */font) {
         that.backBufferContext2D.font = font || "bold 30px sans-serif";
 		that.backBufferContext2D.fillStyle = color || "White";
-		that.backBufferContext2D.fillText(text, posX || (CANVASWIDTH / 2 - 150), posY || (CANVASHEIGHT - 100));
+		that.backBufferContext2D.fillText(text, posX || (CANVASWIDTH / 2 - text.length * 7.5), posY || (CANVASHEIGHT - 100));
 	};
 
 	var drawInstructions = function () {
@@ -549,10 +550,52 @@ function Game() {
 		that.backBufferContext2D.fillText("Instructions:", 100, CANVASHEIGHT / 4);
 		that.backBufferContext2D.fillText("Multiplayer game. Kill the enemies.", 160, CANVASHEIGHT / 4 + 50);
 		that.backBufferContext2D.fillText("Lasers pass through edges.", 160, CANVASHEIGHT / 4 + 100);
-
-//		that.backBufferContext2D.strokeStyle = "Orange";
 		that.backBufferContext2D.fillText("Use the Arrow Keys to move, Space to shoot.", 160, CANVASHEIGHT / 4 + 180);
-	};
+    };
+
+    var drawPlayersList = function () {
+        var xBase = 10, yBase = 50, xOffset = 10, yOffset = 20;
+        var width = 40;
+        var textheight = 20;
+
+        that.backBufferContext2D.font = "normal 10px sans-serif";
+        that.backBufferContext2D.fillStyle = "rgba(0, 255, 0, 0.9)";
+        that.backBufferContext2D.fillText("Players Connected (" + that.Players.length + ")", xBase, yBase);
+        that.backBufferContext2D.fillStyle = "rgba(255, 255, 255, 0.7)";
+        for (var i in that.Players) {
+            var player = that.Players[i];
+            that.backBufferContext2D.fillText("-" + player.name, xBase + xOffset, yBase + (parseInt(i) + 1) * textheight);
+        }
+    };
+
+    var drawHighScores = function (data) {
+        var leftEdge = 3 * CANVASWIDTH / 8, width = CANVASWIDTH / 4, nameOffset = 10, scoreOffset = CANVASWIDTH / 4 - 75;
+        var topEdge = CANVASHEIGHT / 8, height = 6 * CANVASHEIGHT / 8, yOffset = 30;
+        var textheight = 40;
+
+        drawUIBox(3 * CANVASWIDTH / 8, CANVASHEIGHT / 8, CANVASWIDTH / 4, 6 * CANVASHEIGHT / 8, "rgba(0, 0, 200, 0.6)");
+
+        pretenddata = [{ N: 'abc', S: 100 }, { N: 'def', S: 200}];
+        data = pretenddata;
+
+
+        that.backBufferContext2D.font = "normal " + textheight + "px sans-serif";
+        that.backBufferContext2D.fillStyle = "rgba(252, 194, 0, 0.9)";
+        that.backBufferContext2D.fillText("High Scores", CANVASWIDTH / 2 - 105, topEdge);
+
+        for (var i in data) {
+            var player = data[i];
+            that.backBufferContext2D.fillText(player.N, leftEdge + nameOffset, topEdge + yOffset + textheight * (parseInt(i) + 1));
+            that.backBufferContext2D.fillText(player.S, leftEdge + scoreOffset, topEdge + yOffset + textheight * (parseInt(i) + 1));
+        }
+    };
+
+    var drawUIBox = function (PosX, PosY, width, height, fill) {
+        that.backBufferContext2D.fillStyle = fill;
+        that.backBufferContext2D.strokeStyle = "White";
+        that.backBufferContext2D.fillRect(PosX, PosY, width, height);
+        that.backBufferContext2D.strokeRect(PosX, PosY, width, height);
+    };
 
 	var p1rightKey = false;
 	var p1leftKey = false;
@@ -586,7 +629,7 @@ function Game() {
 	    }
 	}
 
-	this.onKeyUp = function (evt) {
+    this.onKeyUp = function (evt) {
 		if (evt.keyCode == 39) p1rightKey = false;
 		else if (evt.keyCode == 37) p1leftKey = false;
 		if (evt.keyCode == 38) p1upKey = false;
