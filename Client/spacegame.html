@@ -61,16 +61,18 @@ var saveScore = function () {
 	        score : game.playerScore
 	};
 
-    jQuery.post("/savescore", data, function () { alert('success'); }).error(function (e) { alert('error'); });
+//    jQuery.post("/savescore", data, function () { alert('success'); }).error(function (e) { alert('error'); });
     jQuery("#savescore").dialog('close');
+//FIX, move to on success
+	saveName(data.name);
 };
 
 var cancelSignup = function () {
 	jQuery("#signup").dialog('close');
-	showSavescore();
+	showSaveScore();
 };
 
-var showSavescore = function () {
+var showSaveScore = function () {
 	jQuery("#score").text(game.PlayerScore);
 	jQuery("#savescore").dialog('open');
 };
@@ -91,19 +93,22 @@ var postSignup = function () {
 //	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
 	//FIX
 	//move to success
-	game.nameChange(data.name);
-	document.cookie = 'name=' + data.name;
+	saveName(data.name);
     //document.cookie = 'name=testcookie; expires=Thu, 2 Aug 2021 20:47:11 UTC; path=/'
 	jQuery("#signup").dialog('close');
-
-	game.saveScore();
 
 /*    var data2 = {
         name : data.name,
         score : game.PlayerScore
     };
     jQuery.post("/savescore", data2, function () { alert('success'); }).error(function (e) { alert('error'); });*/
+};
 
+var saveName = function (name) {
+	game.nameChange(name);
+	document.cookie = 'name=' + name;
+	game.hascookie = true;
+	game.saveScore(name);
 };
 
 </script>

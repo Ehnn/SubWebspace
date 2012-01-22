@@ -178,12 +178,12 @@ function Game() {
 	    /** save the score / Offer the player to sign up / offer the player to save the score */
 		if (this.hascookie)
 			game.saveScore();
-		else if (!this.offeredsignup) {
+		else /*if (!this.offeredsignup)*/ {
 			this.offeredsignup = true;
 			showSignup();
 		}
-		else
-			showSaveScore();
+//		else
+//			showSaveScore();
 	};
 
 	this.saveScore = function (name) {
