@@ -36,15 +36,15 @@
 
 <div id="signup" title="Sign up">
 	<div> To save your score, you can sign up</div>
-	<div><span class='inputtag'>Name</span><input id="namefield" type="text" class="inputfield"></input></div>
-	<div><span class='inputtag'>Email</span><input id="emailfield" type="text" class="inputfield"></input></div>
-	<div><span class='inputtag'>Password</span><input id="passwordfield" type="text" class="inputfield"></input></div>
+	<div><span class='inputtag'>Name</span><input id="namefield" type="text" class="inputfield"></div>
+	<div><span class='inputtag'>Email</span><input id="emailfield" type="text" class="inputfield"></div>
+	<div><span class='inputtag'>Password</span><input id="passwordfield" type="text" class="inputfield"></div>
 	<div><input class="signupsubmit" type="button" value="Sign up" onclick="postSignup()" /><input type="button" value="Back" onclick="cancelSignup()"></div>
 </div>
 
 <div id="savescore" title="Save score">
 	<div>Your score:<span id="score"></span></div>
-	<div><span class='inputtag'>Name</span><input id="scorenamefield" type="text" class="inputfield"></input></div>
+	<div><span class='inputtag'>Name</span><input id="scorenamefield" type="text" class="inputfield"></div>
 	<div><input class="savescoresubmit" type="button" value="save" onclick="saveScore()" /></div>
 </div>
 <script>
@@ -67,7 +67,7 @@ var saveScore = function () {
 
 var cancelSignup = function () {
 	jQuery("#signup").dialog('close');
-
+	showSavescore();
 };
 
 var showSavescore = function () {

@@ -9,9 +9,9 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-//SERVER_CONNECTION = "http://localhost:8080";
+SERVER_CONNECTION = "http://localhost:8080";
 //SERVER_CONNECTION = "http://10.0.0.4:8080";
-SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+//SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
 
 SEND_TIME = 1000 / PACKETS_PER_SECOND;
 DRAWS_PER_RECEIVE = FRAMES_PER_SECOND / PACKETS_PER_SECOND;
@@ -175,7 +175,7 @@ function Game() {
 	this.myPlayerDeath = function () {
 	    game.GameState = 4;
 
-	    /** Offer the player to sign up */
+	    /** save the score / Offer the player to sign up / offer the player to save the score */
 		if (this.hascookie)
 			game.saveScore();
 		else if (!this.offeredsignup) {
