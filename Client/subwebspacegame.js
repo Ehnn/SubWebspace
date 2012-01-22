@@ -186,8 +186,8 @@ function Game() {
 			showSavescore();
 	};
 
-	this.saveScore = function () {
-		socket.emit('highscore', { S: this.PlayerScore, N:this.myPlayer.name });
+	this.saveScore = function (name) {
+		socket.emit('highscore', { S: this.PlayerScore, N: name || this.myPlayer.name });
 	};
 
 	/** bind keys of page, create empty player, start game loop */

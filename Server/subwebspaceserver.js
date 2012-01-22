@@ -1,5 +1,8 @@
-UPDATES_PER_SECOND = 20;
+UPDATES_PER_SECOND = 10;
 UPDATE_TIME_BETWEEN_SENDS = 1000 / UPDATES_PER_SECOND;
+
+SOCKETS_CLEANUP_INTERVAL = 10000;
+SOCKET_MIN_SEND_TIME = 10000;
 
 var spacegame = require('./subwebspacegame');
 var email = require('mailer');
@@ -14,6 +17,8 @@ game.Start();
 
 var PlayerCount = 1;
 var Sockets = [];
+var ShotsFired = [];
+var HighScores = [];
 
 console.log("Starting senddata interval");
 
@@ -29,8 +34,7 @@ var SendData = function () {
 			P: player.Pos,
 			ID: player.ID,
 			L: player.Lives,
-			N: player.name
-};
+			N: player.name };
 
 		players.push(obj);
 	}
@@ -48,10 +52,18 @@ var broadcast = function (event, data1, data2, data3) {
 	}
 };
 
-var ShotsFired = [];
-var HighScores = [];
+var ClearSockets = function () {
+	var time = new Date().getTime();
+	for (var i in Sockets) {
+		var socket = Sockets[i];
+		if (time - socket.LastReceive > SOCKET_MIN_SEND_TIME)
+		/** hopefully socket.io will close the actual connection himself.. */
+			Sockets.splice(i, 1);
+	}
+};
 
 setInterval(SendData, UPDATE_TIME_BETWEEN_SENDS);
+setInterval(ClearSockets, SOCKETS_CLEANUP_INTERVAL);
 
 io.sockets.on('connection', function (socket) {
 	socket.PlayerID = PlayerCount++;
@@ -78,6 +90,7 @@ io.sockets.on('connection', function (socket) {
 
 		socket.emit('playercreated', { PlayerID:socket.PlayerID, tick:game.tick, ticktime:game.ticktime, P: players, N:name });
 		broadcast('addplayer', { ID: socket.PlayerID, N:name });
+		socket.LastReceive = new Date().getTime();
 	});
 
 	socket.on("clientping", function (data) {
@@ -87,6 +100,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('clientdata', function (data) {
 		game.UpdatePlayerActions(data);
+		socket.LastReceive = new Date().getTime();
 	});
 
 	socket.on('disconnect', function (data) {
@@ -119,7 +133,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('highscore', function (data) {
 		var changed = game.ReceiveHighScore(data);
-		if (changed)
-			broadcast('highscores', game.HighScores);
+		if (changed) broadcast('highscores', game.HighScores);
 	});
 });
