@@ -250,10 +250,6 @@ function Game() {
 	};
 
 	var hitCallback = function (data) {
-//	    for (var i in that.Players)
-//	        if (that.Players[i].ID == data.ID)
-//	            that.Players[i].Hit();
-
 	    if (that.myPlayer.ID == data.ID)
 	        that.myPlayer.Hit();
 
@@ -346,14 +342,16 @@ function Game() {
 
 	    for (var j in data) {
 	        var serverplayerdata = data[j];
-	        for (var i in that.Players) {
-	            var player = that.Players[i];
-
-			if (player.ID == serverplayerdata.ID) {
-				player.UpdateData(serverplayerdata, T);
-			        break;
-			}
-	        }
+		var index = GetPlayerIndex(serverplayerdata.ID);
+		/** create a player */
+		if (index == -1) {
+			var enemyplayer = new Player();
+			enemyplayer.Init(2, serverplayerdata.ID, serverplayerdata.N);
+			that.Players.push(enemyplayer);
+		}
+		else {
+			that.Players[index].UpdateData(serverplayerdata, T);
+		}
 	    }
 	};
 
