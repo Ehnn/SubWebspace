@@ -9,9 +9,9 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-//SERVER_CONNECTION = "http://localhost:8080";
+SERVER_CONNECTION = "http://localhost:8080";
 //SERVER_CONNECTION = "http://10.0.0.4:8080";
-SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+//SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
 
 SEND_TIME = 1000 / PACKETS_PER_SECOND;
 DRAWS_PER_RECEIVE = FRAMES_PER_SECOND / PACKETS_PER_SECOND;
@@ -294,8 +294,7 @@ function Game() {
 
 	var disconnectCallback = function (data) {
 	    var index = GetPlayerIndex(data.ID);
-        if (index != -1)
-	        that.Players.splice(index, 1);
+		if (index != -1) that.Players.splice(index, 1);
 	};
 
 	var pingCallback = function (data) {
@@ -340,6 +339,11 @@ function Game() {
 	        that.ShotList.push(newshot);
 	    }
 
+/*		for (var i in that.Players) {
+			var player = that.Players[i];
+			player.updated = false;
+		}*/
+	
 	    for (var j in data) {
 	        var serverplayerdata = data[j];
 		var index = GetPlayerIndex(serverplayerdata.ID);
@@ -348,11 +352,18 @@ function Game() {
 			var enemyplayer = new Player();
 			enemyplayer.Init(2, serverplayerdata.ID, serverplayerdata.N);
 			that.Players.push(enemyplayer);
+		//	enemyplayer.updated = true;
 		}
 		else {
+		//	that.Players[index].updated = true;
 			that.Players[index].UpdateData(serverplayerdata, T);
 		}
 	    }
+
+		/*for (var i in that.Players) {
+			var player = that.Players[i];
+			if (!player.updated) that.Players.splice(i, 1);
+		}*/
 	};
 
 	this.SendData = function (dt) {
