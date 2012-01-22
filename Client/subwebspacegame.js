@@ -9,9 +9,9 @@ CANVAS_BORDER_SPACE = 20;
 ASTEROID_CREATION_TIME = 7;
 MAX_ASTEROIDS_NUM = 10;
 
-SERVER_CONNECTION = "http://localhost:8080";
+//SERVER_CONNECTION = "http://localhost:8080";
 //SERVER_CONNECTION = "http://10.0.0.4:8080";
-//SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
 
 SEND_TIME = 1000 / PACKETS_PER_SECOND;
 DRAWS_PER_RECEIVE = FRAMES_PER_SECOND / PACKETS_PER_SECOND;
@@ -103,6 +103,7 @@ function Game() {
 
 	var socket;
 	var highScores = [];
+	var joined = false;
 	this.ShotList = [];
 	this.hascookie = false;
 	this.offeredsignup = false;
@@ -177,11 +178,9 @@ function Game() {
 
 	    /** save the score / Offer the player to sign up / offer the player to save the score */
 		if (this.hascookie)
-			game.saveScore();
-		else /*if (!this.offeredsignup)*/ {
-			this.offeredsignup = true;
+			this.saveScore();
+		else /*if (!this.offeredsignup)*/
 			showSignup();
-		}
 //		else
 //			showSaveScore();
 	};
@@ -308,6 +307,7 @@ function Game() {
 
 	var Join = function () {
 	    if (that.myPlayer.Lives <= 0 && that.Connected) {
+		joined = true;
 	        that.myPlayer.Spawn(200, 200, -90);
 	        socket.emit('spawn', { ID:that.myPlayer.ID, X: 200, Y: 200, R: -90 });
 		that.PlayerScore = 0;
@@ -515,7 +515,8 @@ function Game() {
 	            break;
 	        /** in-game */
 	        case 4:
-	            drawHighScores();
+			if (joined)
+		            drawHighScores();
 	            drawHUD();
 	            drawMessage("Press Enter to join");
 	            break;
