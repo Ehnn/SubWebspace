@@ -8,6 +8,9 @@
 		.game-wrap {position:relative;merging:0 auto;left:50%;width:800; height:600}
 		.invis { display: none}
 		#signup {display: none}
+		#savescore {display: none}
+		.inputtag { width:300px }
+		.inputfield {width:300px}
 	</style>
 	<title>Adam Zeira and Shirly Biniashvili</title>
 </head>
@@ -31,21 +34,50 @@
 <script src="asteroid.js"></script>
 
 
-<div id="signup">
+<div id="signup" title="Sign up">
 	<div> To save your score, you can sign up</div>
-	<div><span class='inputtag'>Name</span><input id="namefield" type="text"></input></div>
-	<div><span class='inputtag'>Email</span><input id="emailfield" type="text"></input></div>
-	<div><span class='inputtag'>Password</span><input id="passwordfield" type="text"></input></div>
-	<div><input class="signupsubmit" type="button" value="Sign up" onclick="postSignup()" /><input type="button" value="Back" onclick="closeSignup()"></div>
+	<div><span class='inputtag'>Name</span><input id="namefield" type="text" class="inputfield"></input></div>
+	<div><span class='inputtag'>Email</span><input id="emailfield" type="text" class="inputfield"></input></div>
+	<div><span class='inputtag'>Password</span><input id="passwordfield" type="text" class="inputfield"></input></div>
+	<div><input class="signupsubmit" type="button" value="Sign up" onclick="postSignup()" /><input type="button" value="Back" onclick="cancelSignup()"></div>
+</div>
+
+<div id="savescore" title="Save score">
+	<div>Your score:<span id="score"></span></div>
+	<div><span class='inputtag'>Name</span><input id="scorenamefield" type="text" class="inputfield"></input></div>
+	<div><input class="savescoresubmit" type="button" value="save" onclick="saveScore()" /></div>
 </div>
 <script>
 
 jQuery(function () {
-	jQuery('#signup').dialog({ autoOpen:false });
+	jQuery('#signup').dialog({ autoOpen:false, resizable:false });
+    jQuery('#savescore').dialog({ autoOpen:false, resizable:false });
 });
 
-var closeSignup = function () {
+var saveScore = function () {
+    var form = jQuery("#savescore");
+    var data = {
+		name : form.find("#scorenamefield").val(),
+        score : game.playerScore
+	};
+
+    jQuery.post("/savescore", data, function () { alert('success'); }).error(function (e) { alert('error'); });
+    jQuery("#savescore").dialog('close');
+};
+
+var cancelSignup = function () {
 	jQuery("#signup").dialog('close');
+
+};
+
+var showSavescore = function () {
+	jQuery("#score").text(game.PlayerScore);
+	jQuery("#savescore").dialog('open');
+};
+
+var showSignup = function () {
+    jQuery("#signup").dialog('open');
+	jQuery("#signup").find("#namefield").val(game.myPlayer.name);
 };
 
 var postSignup = function () {
@@ -56,13 +88,22 @@ var postSignup = function () {
 		password : form.find("#passwordfield").val()
 	};
 
-	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
-	game.signdeup = true;
+//	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
 	//FIX
 	//move to success
 	game.nameChange(data.name);
 	document.cookie = 'name=' + data.name;
+    //document.cookie = 'name=testcookie; expires=Thu, 2 Aug 2021 20:47:11 UTC; path=/'
 	jQuery("#signup").dialog('close');
+
+	game.saveScore();
+
+/*    var data2 = {
+        name : data.name,
+        score : game.PlayerScore
+    };
+    jQuery.post("/savescore", data2, function () { alert('success'); }).error(function (e) { alert('error'); });*/
+
 };
 
 </script>

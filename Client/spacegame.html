@@ -67,8 +67,12 @@ var saveScore = function () {
 
 var cancelSignup = function () {
 	jQuery("#signup").dialog('close');
-    jQuery("#score").text(game.PlayerScore);
-    jQuery("#savescore").dialog('open');
+	showSavescore();
+};
+
+var showSavescore = function () {
+	jQuery("#score").text(game.PlayerScore);
+	jQuery("#savescore").dialog('open');
 };
 
 var showSignup = function () {
@@ -84,7 +88,7 @@ var postSignup = function () {
 		password : form.find("#passwordfield").val()
 	};
 
-	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
+//	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
 	//FIX
 	//move to success
 	game.nameChange(data.name);
@@ -92,11 +96,14 @@ var postSignup = function () {
     //document.cookie = 'name=testcookie; expires=Thu, 2 Aug 2021 20:47:11 UTC; path=/'
 	jQuery("#signup").dialog('close');
 
-    var data2 = {
+	game.saveScore();
+
+/*    var data2 = {
         name : data.name,
         score : game.PlayerScore
     };
-    jQuery.post("/savescore", data2, function () { alert('success'); }).error(function (e) { alert('error'); });
+    jQuery.post("/savescore", data2, function () { alert('success'); }).error(function (e) { alert('error'); });*/
+
 };
 
 </script>

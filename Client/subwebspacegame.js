@@ -102,6 +102,7 @@ function Game() {
 	this.PlayerScore = 0;
 
 	var socket;
+	var highScores = [];
 	this.ShotList = [];
 	this.hascookie = false;
 	this.offeredsignup = false;
@@ -174,11 +175,19 @@ function Game() {
 	this.myPlayerDeath = function () {
 	    game.GameState = 4;
 
-	    /** Offer the player to sign up */
-	    if (!this.hascookie && !this.offeredsignup) {
-	        this.offeredsignup = true;
-	        showSignup();
-	    }
+	    /** save the score / Offer the player to sign up / offer the player to save the score */
+		if (this.hascookie)
+			game.saveScore();
+		else if (!this.offeredsignup) {
+			this.offeredsignup = true;
+			showSignup();
+		}
+		else
+			showSavescore();
+	};
+
+	this.saveScore = function () {
+		socket.emit('highscore', { S: this.PlayerScore, N:this.myPlayer.name });
 	};
 
 	/** bind keys of page, create empty player, start game loop */
@@ -234,6 +243,7 @@ function Game() {
 	        socket.on('removeplayer', disconnectCallback);
 	        socket.on('hit', hitCallback);
 	        socket.on('namechange', namechangeCallback);
+	        socket.on('highscores', highscoresCallback);
 
 	        that.pingLoop = setInterval(Ping, PING_SEND_TIME);
 	    });
@@ -252,6 +262,10 @@ function Game() {
 	        if (shot.PID == data.PID && shot.guid == data.SID)
 	            that.ShotList.splice(i, 1);
 	    }
+	};
+
+	var highscoresCallback = function (data) {
+		highScores = data;
 	};
 
 	var spawnCallback = function (data) {
@@ -568,23 +582,19 @@ function Game() {
         }
     };
 
-    var drawHighScores = function (data) {
+    var drawHighScores = function () {
         var leftEdge = 3 * CANVASWIDTH / 8, width = CANVASWIDTH / 4, nameOffset = 10, scoreOffset = CANVASWIDTH / 4 - 75;
         var topEdge = CANVASHEIGHT / 8, height = 6 * CANVASHEIGHT / 8, yOffset = 30;
         var textheight = 40;
 
         drawUIBox(3 * CANVASWIDTH / 8, CANVASHEIGHT / 8, CANVASWIDTH / 4, 6 * CANVASHEIGHT / 8, "rgba(0, 0, 200, 0.6)");
 
-        pretenddata = [{ N: 'abc', S: 100 }, { N: 'def', S: 200}];
-        data = pretenddata;
-
-
         that.backBufferContext2D.font = "normal " + textheight + "px sans-serif";
         that.backBufferContext2D.fillStyle = "rgba(252, 194, 0, 0.9)";
         that.backBufferContext2D.fillText("High Scores", CANVASWIDTH / 2 - 105, topEdge);
 
-        for (var i in data) {
-            var player = data[i];
+        for (var i in highScores) {
+            var player = highScores[i];
             that.backBufferContext2D.fillText(player.N, leftEdge + nameOffset, topEdge + yOffset + textheight * (parseInt(i) + 1));
             that.backBufferContext2D.fillText(player.S, leftEdge + scoreOffset, topEdge + yOffset + textheight * (parseInt(i) + 1));
         }

@@ -193,4 +193,22 @@ function Game() {
 				this.Players[i].name = data.N;
 		}
 	};
+
+	this.HighScores = [];
+
+	/** return true if high scores have changed, false otherwise */
+	this.ReceiveHighScore = function (data) {
+		var i = 0;
+		for (; i < HighScores.length; i++) {
+			if (data.S > HighScores[i].S)
+				break;
+		}
+
+		if (i < 10) {
+			HighScores.splice(i, 1, data);
+			return true;
+		}
+
+		return false;
+	};
 }

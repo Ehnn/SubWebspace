@@ -188,6 +188,27 @@ function Game() {
 	};
 
 	this.UpdatePlayerName = function (data) {
-		
+		for (var i in this.Players) {
+			if (this.Players[i].ID == data.ID)
+				this.Players[i].name = data.N;
+		}
+	};
+
+	this.HighScores = [];
+
+	/** return true if high scores have changed, false otherwise */
+	this.ReceiveHighScore = function (data) {
+		var i = 0;
+		for (i = 0; i < HighScores.length; i++) {
+			if (data.S > HighScores[i].S)
+				break;
+		}
+
+		if (i < 10) {
+			HighScores.splice(i, 1, data);
+			return true;
+		}
+
+		return false;
 	};
 }

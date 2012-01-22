@@ -49,6 +49,7 @@ var broadcast = function (event, data1, data2, data3) {
 };
 
 var ShotsFired = [];
+var HighScores = [];
 
 setInterval(SendData, UPDATE_TIME_BETWEEN_SENDS);
 
@@ -70,7 +71,8 @@ io.sockets.on('connection', function (socket) {
 				X:player.Pos.X,
 				Y:player.Pos.Y,
 				R:player.Rotation,
-				L:player.Lives
+				L:player.Lives,
+				N:player.name
 				});
 		}
 
@@ -113,5 +115,11 @@ io.sockets.on('connection', function (socket) {
 		data.ID = socket.PlayerID;
 		game.UpdatePlayerName(data);
 		broadcast('namechange', data);
+	});
+
+	socket.on('highscore', function (data) {
+		var changed = game.ReceiveHighScore(data);
+		if (changed)
+			broadcast('highscores', game.HighScores);
 	});
 });
