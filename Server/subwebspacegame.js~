@@ -159,7 +159,6 @@ function Game() {
 		if (!name) name = "Guest" + id;
 		player.Init(1, id, name);
 		this.Players.push(player);
-
 		return name;
 	};
 
@@ -186,5 +185,9 @@ function Game() {
 			if (this.Players[i].ID == playerdata.ID)
 				this.Players[i].UpdateData(playerdata);
 		}
+	};
+
+	this.UpdatePlayerName = function (data) {
+		
 	};
 }

@@ -1,17 +1,18 @@
 <html>
 <head>
+	<link type="text/css" href="jquery-ui-1.8.17.custom.css" rel="stylesheet" />
 	<style type="text/css">
 		canvas, img {display:block;margin:1em auto; border:1px solid black;}
 		canvas { z-index:2;position:absolute;background:url(space.jpg) }
-		.explosiondiv { z-index:60;position:absolute;left:100px; background-image: url(explosion1.gif); height: 139px; width: 100px;}
-		.canvas-wrap {position:relative;merging:0 auto;left:50%; width:800; height:600}
+		.explosiondiv { z-index:60;position:absolute;background-image: url(explosion1.gif); height: 139px; width: 100px;}
+		.game-wrap {position:relative;merging:0 auto;left:50%;width:800; height:600}
 		.invis { display: none}
-		.signup { position:absolute;z-index:10; background-Color:White; left:50%; top:20%; width:400px; height:300px; }
+		#signup {display: none}
 	</style>
 	<title>Adam Zeira and Shirly Biniashvili</title>
 </head>
 <body>
-	<div class="canvas-wrap">
+	<div id="game-wrap">
 
 		<canvas id="gamecanvas" width="800" height="600" style="background-color:Red">
 			Your browser does not support the canvas element
@@ -20,37 +21,48 @@
 		<div id="explosiondiv1" class="explosiondiv invis"></div>
 		<div id="explosiondiv2" class="explosiondiv invis"></div>
         Sound <input type="checkbox" checked="checked" />
-	<input type="button" text="POST" onclick="postscore()">
 	</div>
 <script src="socket.io.js"></script>
-<script src="jquery.min.js"></script>
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
 <script src="player.js"></script>
 <script src="laser.js"></script>
 <script src="subwebspacegame.js"></script>
 <script src="asteroid.js"></script>
 
-<div class="signup">
-TEXT TEXT
-<form>
 
-</form>
+<div id="signup">
+	<div> To save your score, you can sign up</div>
+	<div><span class='inputtag'>Name</span><input id="namefield" type="text"></input></div>
+	<div><span class='inputtag'>Email</span><input id="emailfield" type="text"></input></div>
+	<div><span class='inputtag'>Password</span><input id="passwordfield" type="text"></input></div>
+	<div><input class="signupsubmit" type="button" value="Sign up" onclick="postSignup()" /><input type="button" value="Back" onclick="closeSignup()"></div>
 </div>
 <script>
-var t = true;
-var postscore = function() {
-	data = {
-		Score:50
+
+jQuery(function () {
+	jQuery('#signup').dialog({ autoOpen:false });
+});
+
+var closeSignup = function () {
+	jQuery("#signup").dialog('close');
+};
+
+var postSignup = function () {
+	var form = jQuery("#signup");
+	var data = {
+		name : form.find("#namefield").val(),
+		email : form.find("#emailfield").val(),
+		password : form.find("#passwordfield").val()
 	};
 
-	alert(jQuery("<div />").dialog);
-	if (t)
-		jQuery(".signup").fadeOut('slow', function() {  });
-	else
-		jQuery(".signup").fadeIn('slow', function() { });
-
-	t = !t;
-//	jQuery.post("http://url.com", data, function () { alert('success'); }).error(function () { alert('error'); });
+	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
+	game.signdeup = true;
+	//FIX
+	//move to success
+	game.nameChange(data.name);
+	document.cookie = 'name=' + data.name;
+	jQuery("#signup").dialog('close');
 };
 
 </script>

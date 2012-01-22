@@ -70,8 +70,7 @@ io.sockets.on('connection', function (socket) {
 				X:player.Pos.X,
 				Y:player.Pos.Y,
 				R:player.Rotation,
-				L:player.Lives,
-				N:player.name
+				L:player.Lives
 				});
 		}
 
@@ -108,5 +107,11 @@ io.sockets.on('connection', function (socket) {
 	socket.on('hit', function (data) {
 		broadcast('hit', data);
 		game.Hit(data);
+	});
+
+	socket.on('playernamechange', function (data) {
+		data.ID = socket.PlayerID;
+		game.UpdatePlayerName(data);
+		broadcast('namechange', data);
 	});
 });

@@ -162,11 +162,12 @@ function Player() {
 	};
 
 	this.Hit = function () {
-	    if (this.Lives > 0) {
-	        this.Lives--;
-	        if (this.Lives <= 0)
-	            this.Destroy();
-	    }
+		if (this.Alive)
+		{
+			this.Lives--;
+			if (this.Lives <= 0)
+			    this.Destroy();
+		}
 	};
 
 	this.Destroy = function () {
@@ -179,8 +180,7 @@ function Player() {
 	        explosion.addClass("invis");
 	    }, 750);
 
-		if (this.isMyPlayer)
-			game.GameState = 4;
+		if (this.isMyPlayer) game.myPlayerDeath();
 	};
 
 	this.Draw = function () {
@@ -189,17 +189,14 @@ function Player() {
 	        game.backBufferContext2D.save();
 	        game.backBufferContext2D.translate(this.Pos.X, this.Pos.Y);
 
-	        //if (!this.isMyPlayer) {
-                /** name */
-	            game.backBufferContext2D.font = "bold 10px sans-serif";
-	            game.backBufferContext2D.fillStyle = "White";
-	            game.backBufferContext2D.fillText(this.name || "No Name", -img.width / 2, -img.height / 2 - 10);
+		game.backBufferContext2D.font = "bold 10px sans-serif";
+		game.backBufferContext2D.fillStyle = "White";
+		game.backBufferContext2D.fillText(this.name || "No Name", -img.width / 2, -img.height / 2 - 10);
 
-	            game.backBufferContext2D.fillStyle = this.isMyPlayer ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)";
-	            game.backBufferContext2D.fillRect(-img.width / 2, -img.height / 2, 5 * this.Lives, 5);
-	            game.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
-	            game.backBufferContext2D.strokeRect(-img.width / 2, -img.height / 2, 50, 5);
-	        //}
+		game.backBufferContext2D.fillStyle = this.isMyPlayer ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)";
+		game.backBufferContext2D.fillRect(-img.width / 2, -img.height / 2, 5 * this.Lives, 5);
+		game.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
+		game.backBufferContext2D.strokeRect(-img.width / 2, -img.height / 2, 50, 5);
 
 	        game.backBufferContext2D.rotate(this.Rotation * Math.PI / 180);
 	        game.backBufferContext2D.drawImage(img, -img.width / 2, -img.height / 2);
@@ -225,7 +222,8 @@ function Player() {
 	        this.State1IsBase = true;
 	    }
 
-	    this.Lives = playerdata.L;
+		if (playerdata.L < this.Lives)
+			this.Lives = playerdata.L
 	    if (this.Lives == 0 && this.Alive)
 	        this.Destroy();
 	};

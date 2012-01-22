@@ -103,6 +103,8 @@ function Game() {
 
 	var socket;
 	this.ShotList = [];
+	this.hascookie = false;
+	this.offeredsignup = false;
 
 	/** load images and sound */
 	var loadResources = function () {
@@ -161,10 +163,23 @@ function Game() {
 	this.Init = function () {
 		that.GameState = 1;
 		initBackbuffer();
+
+		jQuery("#game-wrap").addClass("game-wrap").css("margin-left", -CANVASWIDTH / 2);
 		jQuery(this).bind("ResourcesLoaded", Start);
 		loadResources();
 		
 		return this;
+	};
+
+	this.myPlayerDeath = function () {
+		game.GameState = 4;
+
+		/** Offer the player to sign up */
+		if (!this.hascookie && !this.offeredsignup) {
+			this.offeredsignup = true;
+			jQuery("#signup").dialog('open');
+			jQuery("#signup").find("#namefield").val(this.myPlayer.name);
+		}
 	};
 
 	/** bind keys of page, create empty player, start game loop */
@@ -176,6 +191,18 @@ function Game() {
 	    that.myPlayer = new Player();
 	    that.myPlayer.isMyPlayer = true;
 
+		/** Get cookies player name */
+		if (document.cookie) {
+			var splitvars = document.cookie.split(';');
+			for (var i in splitvars) {
+				var pair = splitvars[i].split('=');
+				if (pair[0] == "name") {
+					that.hascookie = true;
+					that.myPlayer.name = pair[1];
+				}
+			}
+		}
+
 	    /** Game loop */
 	    that.gameloop = setInterval(function () { that.GameLoop(); }, MS_BETWEEN_FRAMES);
 	};
@@ -185,7 +212,7 @@ function Game() {
 	    that.GameState = 3;
 	    socket = io.connect(SERVER_CONNECTION);
 	    //FIX name
-	    socket.emit('playercreate', { N: name });
+	    socket.emit('playercreate', { N: that.myPlayer.name });
 	    socket.on('playercreated', function (data) {
 	        that.Connected = true;
 	        that.myPlayer.Init(1, data.PlayerID, data.N);
@@ -209,6 +236,7 @@ function Game() {
 	        socket.on('addplayer', connectCallback);
 	        socket.on('removeplayer', disconnectCallback);
 	        socket.on('hit', hitCallback);
+	        socket.on('namechange', namechangeCallback);
 
 	        that.pingLoop = setInterval(Ping, PING_SEND_TIME);
 	    });
@@ -236,18 +264,25 @@ function Game() {
 	};
 
 	var connectCallback = function (data) {
-	    if (PlayerExists(data.ID)) return;
+	    if (GetPlayerIndex(data.ID) != -1) return;
 
 	    var enemyplayer = new Player();
 	    enemyplayer.Init(2, data.ID, data.N);
 	    that.Players.push(enemyplayer);
 	};
 
-	var PlayerExists = function (ID) {
+	var namechangeCallback = function (data) {
+		var index = GetPlayerIndex(data.ID);
+		if (index != -1)
+			that.Players[index].name = data.N;
+	}
+
+	/** index or -1 on not finding */
+	var GetPlayerIndex = function (ID) {
 	    for (var i in that.Players)
 	        if (that.Players[i].ID == ID)
-	            return true;
-	    return false;
+	            return i;
+	    return -1;
 	};
 
 	var disconnectCallback = function (data) {
@@ -337,6 +372,11 @@ function Game() {
 	    socket.emit('hit', { ID: player.ID, SID: shot.guid, PID: this.myPlayer.ID });
 	};
 
+	this.nameChange = function (name) {
+		this.myPlayer.name = name;
+		socket.emit('playernamechange', { N:this.myPlayer.name });
+	};
+
 	this.Update = function (/** time diff */dt) {
 	    //FIX to a better check
 	    /** player input */
@@ -378,6 +418,7 @@ function Game() {
 	        for (var j in that.Players) {
 	            player = that.Players[j];
 	            if (player.Alive && player.ID != that.myPlayer.ID && CheckLaserCollision(player, shot)) {
+			player.Hit();
 	                this.SendHit(player, shot);
 			this.PlayerScore += 10;
 			if (!player.Alive)

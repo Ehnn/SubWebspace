@@ -186,4 +186,11 @@ function Game() {
 				this.Players[i].UpdateData(playerdata);
 		}
 	};
+
+	this.UpdatePlayerName = function (data) {
+		for (var i in this.Players) {
+			if (this.Players[i].ID == data.ID)
+				this.Players[i].name = data.N;
+		}
+	};
 }
