@@ -103,6 +103,7 @@ function Game() {
 
 	var socket;
 	var highScores = [];
+	var joined = false;
 	this.ShotList = [];
 	this.hascookie = false;
 	this.offeredsignup = false;
@@ -177,17 +178,15 @@ function Game() {
 
 	    /** save the score / Offer the player to sign up / offer the player to save the score */
 		if (this.hascookie)
-			game.saveScore();
-		else if (!this.offeredsignup) {
-			this.offeredsignup = true;
+			this.saveScore();
+		else /*if (!this.offeredsignup)*/
 			showSignup();
-		}
-		else
-			showSavescore();
+//		else
+//			showSaveScore();
 	};
 
-	this.saveScore = function () {
-		socket.emit('highscore', { S: this.PlayerScore, N:this.myPlayer.name });
+	this.saveScore = function (name) {
+		socket.emit('highscore', { S: this.PlayerScore, N: name || this.myPlayer.name });
 	};
 
 	/** bind keys of page, create empty player, start game loop */
@@ -250,10 +249,6 @@ function Game() {
 	};
 
 	var hitCallback = function (data) {
-//	    for (var i in that.Players)
-//	        if (that.Players[i].ID == data.ID)
-//	            that.Players[i].Hit();
-
 	    if (that.myPlayer.ID == data.ID)
 	        that.myPlayer.Hit();
 
@@ -298,8 +293,7 @@ function Game() {
 
 	var disconnectCallback = function (data) {
 	    var index = GetPlayerIndex(data.ID);
-        if (index != -1)
-	        that.Players.splice(index, 1);
+		if (index != -1) that.Players.splice(index, 1);
 	};
 
 	var pingCallback = function (data) {
@@ -313,6 +307,7 @@ function Game() {
 
 	var Join = function () {
 	    if (that.myPlayer.Lives <= 0 && that.Connected) {
+		joined = true;
 	        that.myPlayer.Spawn(200, 200, -90);
 	        socket.emit('spawn', { ID:that.myPlayer.ID, X: 200, Y: 200, R: -90 });
 		that.PlayerScore = 0;
@@ -344,17 +339,31 @@ function Game() {
 	        that.ShotList.push(newshot);
 	    }
 
+/*		for (var i in that.Players) {
+			var player = that.Players[i];
+			player.updated = false;
+		}*/
+	
 	    for (var j in data) {
 	        var serverplayerdata = data[j];
-	        for (var i in that.Players) {
-	            var player = that.Players[i];
-
-			if (player.ID == serverplayerdata.ID) {
-				player.UpdateData(serverplayerdata, T);
-			        break;
-			}
-	        }
+		var index = GetPlayerIndex(serverplayerdata.ID);
+		/** create a player */
+		if (index == -1) {
+			var enemyplayer = new Player();
+			enemyplayer.Init(2, serverplayerdata.ID, serverplayerdata.N);
+			that.Players.push(enemyplayer);
+		//	enemyplayer.updated = true;
+		}
+		else {
+		//	that.Players[index].updated = true;
+			that.Players[index].UpdateData(serverplayerdata, T);
+		}
 	    }
+
+		/*for (var i in that.Players) {
+			var player = that.Players[i];
+			if (!player.updated) that.Players.splice(i, 1);
+		}*/
 	};
 
 	this.SendData = function (dt) {
@@ -506,7 +515,8 @@ function Game() {
 	            break;
 	        /** in-game */
 	        case 4:
-	            drawHighScores();
+			if (joined)
+		            drawHighScores();
 	            drawHUD();
 	            drawMessage("Press Enter to join");
 	            break;

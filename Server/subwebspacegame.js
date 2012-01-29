@@ -207,9 +207,6 @@ function Game() {
 			this.HighScores.splice(i, 0, data);
 			if (this.HighScores.length > 10)
 				this.HighScores.pop();
-			return true;
 		}
-
-		return false;
 	};
 }

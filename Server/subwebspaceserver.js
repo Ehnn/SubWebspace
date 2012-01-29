@@ -132,7 +132,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('highscore', function (data) {
-		var changed = game.ReceiveHighScore(data);
-		if (changed) broadcast('highscores', game.HighScores);
+		game.ReceiveHighScore(data);
+		broadcast('highscores', game.HighScores);
 	});
 });

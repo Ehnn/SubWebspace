@@ -35,16 +35,16 @@
 
 
 <div id="signup" title="Sign up">
-	<div> To save your score, you can sign up</div>
-	<div><span class='inputtag'>Name</span><input id="namefield" type="text" class="inputfield"></div>
+	<div>To receive emails, you can sign up</div>
+	<div><span class='inputtag'>Name</span><input id="namefield" type="text" maxlength=8 class="inputfield"></div>
 	<div><span class='inputtag'>Email</span><input id="emailfield" type="text" class="inputfield"></div>
-	<div><span class='inputtag'>Password</span><input id="passwordfield" type="text" class="inputfield"></div>
+	<div><span class='inputtag'>Password</span><input id="passwordfield" type="password" class="inputfield"></div>
 	<div><input class="signupsubmit" type="button" value="Sign up" onclick="postSignup()" /><input type="button" value="Back" onclick="cancelSignup()"></div>
 </div>
 
 <div id="savescore" title="Save score">
 	<div>Your score:<span id="score"></span></div>
-	<div><span class='inputtag'>Name</span><input id="scorenamefield" type="text" class="inputfield"></div>
+	<div><span class='inputtag'>Name</span><input id="scorenamefield" type="text" maxlength=8 class="inputfield"></div>
 	<div><input class="savescoresubmit" type="button" value="save" onclick="saveScore()" /></div>
 </div>
 <script>
@@ -58,19 +58,21 @@ var saveScore = function () {
     var form = jQuery("#savescore");
     var data = {
 		name : form.find("#scorenamefield").val(),
-        score : game.playerScore
+	        score : game.playerScore
 	};
 
-    jQuery.post("/savescore", data, function () { alert('success'); }).error(function (e) { alert('error'); });
+//    jQuery.post("/savescore", data, function () { alert('success'); }).error(function (e) { alert('error'); });
     jQuery("#savescore").dialog('close');
+//FIX, move to on success
+	saveName(data.name);
 };
 
 var cancelSignup = function () {
 	jQuery("#signup").dialog('close');
-	showSavescore();
+	showSaveScore();
 };
 
-var showSavescore = function () {
+var showSaveScore = function () {
 	jQuery("#score").text(game.PlayerScore);
 	jQuery("#savescore").dialog('open');
 };
@@ -88,22 +90,25 @@ var postSignup = function () {
 		password : form.find("#passwordfield").val()
 	};
 
-//	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
+	jQuery.post("/new", data, function () { alert('success'); }).error(function (e) { alert('error'); });
 	//FIX
 	//move to success
-	game.nameChange(data.name);
-	document.cookie = 'name=' + data.name;
+	saveName(data.name);
     //document.cookie = 'name=testcookie; expires=Thu, 2 Aug 2021 20:47:11 UTC; path=/'
 	jQuery("#signup").dialog('close');
-
-	game.saveScore();
 
 /*    var data2 = {
         name : data.name,
         score : game.PlayerScore
     };
     jQuery.post("/savescore", data2, function () { alert('success'); }).error(function (e) { alert('error'); });*/
+};
 
+var saveName = function (name) {
+	game.nameChange(name);
+	document.cookie = 'name=' + name;
+	game.hascookie = true;
+	game.saveScore(name);
 };
 
 </script>
