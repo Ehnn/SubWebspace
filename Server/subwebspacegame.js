@@ -160,13 +160,29 @@ function Game() {
 		if (!name) name = "Guest" + id;
 		player.Init(1, id, name);
 		this.Players.push(player);
+        teamTotals[0]++;
 		return name;
 	};
-
+    
+    /** Team total players. Starts from 1 */
+    var teamTotals = [0, 0, 0];
+    
 	this.Spawn = function (data) {
+        /** determine which team to place on */
+        var min = 1;
+        
+        for (var i = 1; i < teamTotals.length; i++) {
+            if (teamTotals[i] < teamTotals[min])
+                min = i;
+        }
+        
+        teamTotals[min]++;
+        
 		for (var i in this.Players)
 			if (this.Players[i].ID == data.ID)
-				this.Players[i].Spawn(data.X, data.Y, data.R);
+				this.Players[i].Spawn(data.X, data.Y, data.R, min);
+                
+        return min;
 	};
 
 	this.Hit = function (data) {
@@ -174,11 +190,16 @@ function Game() {
 			if (this.Players[i].ID == data.ID)
 				this.Players[i].Lives--;
 	};
-	
+    
 	this.RemovePlayer = function (/** int */ id) {
-		for (var i in this.Players)
-			if (this.Players[i].ID == id)
+		for (var i in this.Players) {
+			if (this.Players[i].ID == id) {
+                var player = this.Players[i];
+                teamTotals[player.Team]--;
+                if (player.Team != 0) teamTotals[0]--;
 				this.Players.splice(i, 1);
+			}
+		}
 	};
 
 	this.UpdatePlayerActions = function (/** client player data */ playerdata) {

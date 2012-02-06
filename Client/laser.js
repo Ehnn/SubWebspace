@@ -1,6 +1,6 @@
-LASERSPEED = 20;
-LASER_FADEOUT = 2;
-LASER_FADEOUT_POINT = 0.5;
+var LASERSPEED = 600;
+var LASER_FADEOUT = 2;
+var LASER_FADEOUT_POINT = 0.5;
 
 
 function Laser() {
@@ -9,18 +9,16 @@ function Laser() {
 	this.Pos = {};
 	this.Fadeout = LASER_FADEOUT;
 	this.img = null;
-	this.guid;
-	this.PID;
+	this.guid = null;
+	this.PID = null;
+    this.Team = null;
 
-	this.Init = function (/** float */X, /** float */Y, /** float */rotation, /** int */lasertype, /** int */guid, /** optional extra time diff */extradt, /** optional player ID */PID) {
-
+	this.Init = function (/** float */X, /** float */Y, /** float */rotation, /** int */team, /** int */guid, /** optional extra time diff */extradt, /** optional player ID */PID) {
 	    this.Pos.X = X;
 	    this.Pos.Y = Y;
 	    this.Rotation = rotation;
-	    if (lasertype == 1)
-	        this.img = laserimage1;
-	    else if (lasertype == 2)
-	        this.img = laserimage2;
+        this.Team = team;
+        this.img = game.Resources['imgLaser' + team];
 	    this.guid = guid;
 
 	    if (PID) this.PID = PID;
@@ -29,22 +27,17 @@ function Laser() {
 	};
 
 	this.Update = function (/** float */ dt) {
-		this.Pos.X += Math.sin(Math.PI + this.Rotation * Math.PI / 180) * LASERSPEED;
-		this.Pos.Y -= Math.cos(Math.PI + this.Rotation * Math.PI / 180) * LASERSPEED;
-
-		if (this.Pos.X >= CANVASWIDTH + CANVAS_BORDER_SPACE) this.Pos.X -= CANVASWIDTH;
-		if (this.Pos.X <= - CANVAS_BORDER_SPACE) this.Pos.X += CANVASWIDTH;
-		if (this.Pos.Y >= CANVASHEIGHT + CANVAS_BORDER_SPACE) this.Pos.Y -= CANVASHEIGHT;
-		if (this.Pos.Y <= - CANVAS_BORDER_SPACE) this.Pos.Y += CANVASHEIGHT;
+		this.Pos.X += Math.sin(Math.PI + this.Rotation * Math.PI / 180) * LASERSPEED * dt;
+		this.Pos.Y -= Math.cos(Math.PI + this.Rotation * Math.PI / 180) * LASERSPEED * dt;
 
 		this.Fadeout -= dt;
 	};
 	
-	this.Draw = function () {
+	this.Draw = function (translateX, translateY) {
 		game.backBufferContext2D.save();
 		if (this.Fadeout < LASER_FADEOUT_POINT)
 			game.backBufferContext2D.globalAlpha = this.Fadeout / LASER_FADEOUT_POINT;
-		game.backBufferContext2D.translate(this.Pos.X, this.Pos.Y);
+		game.backBufferContext2D.translate(translateX, translateY);
 		game.backBufferContext2D.rotate(this.Rotation * Math.PI / 180);
 		game.backBufferContext2D.drawImage(this.img, - this.img.width / 2, - this.img.height / 2);
 		game.backBufferContext2D.restore();

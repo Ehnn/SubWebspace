@@ -1,8 +1,9 @@
-PLAYER_ROTATION_SPEED = 420;
-PLAYER_ACCELERATION_SPEED = 10;
-PLAYER_SPEED_CAP = 20;
-PLAYER_RELOAD_TIME = 0.25;
-SPACE_FRICTION = 2;
+var PLAYER_ROTATION_SPEED = 420;
+var PLAYER_ACCELERATION_SPEED = 10;
+var PLAYER_SPEED_CAP = 20;
+var PLAYER_RELOAD_TIME = 0.25;
+var SPACE_FRICTION = 2;
+var SMOOTHING_THRESHOLD = 600;
 
 
 function Player() {
@@ -30,8 +31,6 @@ function Player() {
 	this.Rotation = 0;
 	this.Reload = 0;
 
-	this.shiptype = null;
-
 	this.Accelerating = 0;
 	this.Rotating = 0;
 	this.Shooting = false;
@@ -45,42 +44,38 @@ function Player() {
 
 	this.collisionWidth = 20;
 	this.collisionHeight = 20;
+    var img = null;
+    this.Team = 0;
 
 	this.Shoot = function () {
 	    if (this.Lives > 0 && this.Reload === 0) {
-	        if (jQuery("input:checked").length) {
-	            if (this.shiptype == 1)
-	                lasersound.play();
-	            else
-	                evillasersound.play();
-	        }
-
 	        var shot = new Laser();
-	        shot.Init(this.Pos.X, this.Pos.Y, this.Rotation, this.shiptype, this.shotguid++);
+	        shot.Init(this.Pos.X, this.Pos.Y, this.Rotation, this.Team, this.shotguid++);
 	        this.Shots.push(shot);
-	        game.SendShot(shot);
+	        game.Shoot(shot);
 	        this.Reload = PLAYER_RELOAD_TIME;
 	    }
 	};
 
-	this.Init = function (/** int */shiptype, /** int */id, name) {
-	    this.shiptype = shiptype;
+	this.Init = function (/** int */id, name) {
 	    this.ID = id;
 	    this.name = name;
 	    this.Lives = 0;
 	};
 
-	this.Spawn = function (/** int */X, /** int */Y, /** int */rotation) {
+	this.Spawn = function (/** int */X, /** int */Y, /** int */rotation, /** int */ team) {
 	    this.Pos.X = X;
 	    this.Pos.Y = Y;
 	    this.Rotation = rotation;
 
-	    this.Lives = 10;
-	    this.Alive = true;
+        this.Team = team;
+        /** currently only imgShip1 and imgShip2 */
+        img = game.Resources['imgShip' + team];
+        this.Lives = 10;
+        this.Alive = true;
 	};
 
 	this.Update = function (dt) {
-	    var SMOOTHING_THRESHOLD = 600;
 	    /** Different calculation for enemy client */
 	    if (!this.isMyPlayer) {
 	        /** Animation smoothing */
@@ -108,6 +103,8 @@ function Player() {
 	        }
 	        return;
 	    }
+        
+        if (!this.Alive) return;
 
 	    if (this.Rotating !== 0) this.Rotation += this.Rotating * dt * PLAYER_ROTATION_SPEED;
 
@@ -118,12 +115,6 @@ function Player() {
 	        this.Reload -= dt;
 	        if (this.Reload <= 0) this.Reload = 0;
 	    }
-
-	    if (this.Pos.X >= CANVASWIDTH + CANVAS_BORDER_SPACE) this.Pos.X -= CANVASWIDTH;
-	    if (this.Pos.X <= -CANVAS_BORDER_SPACE) this.Pos.X += CANVASWIDTH;
-	    if (this.Pos.Y >= CANVASHEIGHT + CANVAS_BORDER_SPACE) this.Pos.Y -= CANVASHEIGHT;
-	    if (this.Pos.Y <= -CANVAS_BORDER_SPACE) this.Pos.Y += CANVASHEIGHT;
-
 
 	    /** calculate forward */
 	    this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180);
@@ -174,29 +165,26 @@ function Player() {
 	    //FIX. badly
 	    this.Lives = 0;
 	    this.Alive = false;
-	    if (jQuery("input:checked").length) explosionsound.play();
-	    var explosion = jQuery("#explosiondiv" + this.shiptype).css('left', this.Pos.X - 50).css('top', this.Pos.Y - 60).removeClass("invis");
-	    setTimeout(function () {
-	        explosion.addClass("invis");
-	    }, 750);
+        this.Team = 0;
+	    
+        game.CreateExplosion(this.Pos.X, this.Pos.Y);
 
 		if (this.isMyPlayer) game.myPlayerDeath();
 	};
 
-	this.Draw = function () {
+	this.Draw = function (translateX, translateY) {
 	    if (this.Lives > 0) {
-	        var img = this.shiptype == 1 ? imgship1 : imgship2;
 	        game.backBufferContext2D.save();
-	        game.backBufferContext2D.translate(this.Pos.X, this.Pos.Y);
+	        game.backBufferContext2D.translate(translateX, translateY);
 
-		game.backBufferContext2D.font = "bold 10px sans-serif";
-		game.backBufferContext2D.fillStyle = "White";
-		game.backBufferContext2D.fillText(this.name || "No Name", -img.width / 2, -img.height / 2 - 10);
-
-		game.backBufferContext2D.fillStyle = this.isMyPlayer ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)";
-		game.backBufferContext2D.fillRect(-img.width / 2, -img.height / 2, 5 * this.Lives, 5);
-		game.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
-		game.backBufferContext2D.strokeRect(-img.width / 2, -img.height / 2, 50, 5);
+    		game.backBufferContext2D.font = "bold 10px sans-serif";
+    		game.backBufferContext2D.fillStyle = "White";
+    		game.backBufferContext2D.fillText(this.name || "No Name", -img.width / 2, -img.height / 2 - 10);
+    
+    		game.backBufferContext2D.fillStyle = this.isMyPlayer ? "rgba(0, 255, 0, 0.8)" : "rgba(255, 0, 0, 0.8)";
+    		game.backBufferContext2D.fillRect(-img.width / 2, -img.height / 2, 5 * this.Lives, 5);
+    		game.backBufferContext2D.strokeStyle = "rgba(250,250,250, 1)";
+    		game.backBufferContext2D.strokeRect(-img.width / 2, -img.height / 2, 50, 5);
 
 	        game.backBufferContext2D.rotate(this.Rotation * Math.PI / 180);
 	        game.backBufferContext2D.drawImage(img, -img.width / 2, -img.height / 2);
@@ -222,9 +210,17 @@ function Player() {
 	        this.State1IsBase = true;
 	    }
 
+        /** player died and has respawned */
+         if (this.Lives === 0 && playerdata.L == 10) {
+            this.Lives = 10;
+            this.Alive = true;
+         }
+        
+        
 		if (playerdata.L < this.Lives)
-			this.Lives = playerdata.L
-	    if (this.Lives == 0 && this.Alive)
+			this.Lives = playerdata.L;
+            
+	    if (this.Lives === 0 && this.Alive)
 	        this.Destroy();
 	};
 };

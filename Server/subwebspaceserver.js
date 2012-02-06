@@ -1,13 +1,35 @@
-UPDATES_PER_SECOND = 10;
-UPDATE_TIME_BETWEEN_SENDS = 1000 / UPDATES_PER_SECOND;
+var UPDATES_PER_SECOND = 10;
+var UPDATE_TIME_BETWEEN_SENDS = 1000 / UPDATES_PER_SECOND;
 
-SOCKETS_CLEANUP_INTERVAL = 10000;
-SOCKET_MIN_SEND_TIME = 10000;
+var SOCKETS_CLEANUP_INTERVAL = 10000;
+var SOCKET_MIN_SEND_TIME = 10000;
+
+/** For web listening */
+var express = require('express');
+
+var app = express.createServer(express.static(__dirname.replace('/Server', '/Client')));
+app.use(express.bodyParser());
+
+app.get("/", function (req,res) {
+    console.log("RECEIVED SOMETHING - GET");
+    console.log(req.params);
+    res.redirect("/spacegame.html");
+});
+
+app.post("/", function (req,res) {
+    console.log("RECEIVED SOMETHING - POST");
+    console.log(req.param('email'));
+    res.send("done");
+    //res.redirect("/spacegame.html");
+});
+
+app.listen(process.env.PORT);
+
+var io = require('socket.io').listen(app);
 
 var spacegame = require('./subwebspacegame');
-var email = require('mailer');
 
-var io = require('socket.io').listen(8080);
+//var io = require('socket.io').listen();
 
 var game = spacegame.MakeGame();
 
@@ -18,7 +40,6 @@ game.Start();
 var PlayerCount = 1;
 var Sockets = [];
 var ShotsFired = [];
-var HighScores = [];
 
 console.log("Starting senddata interval");
 
@@ -34,7 +55,8 @@ var SendData = function () {
 			P: player.Pos,
 			ID: player.ID,
 			L: player.Lives,
-			N: player.name };
+			N: player.name,
+            T: player.Team};
 
 		players.push(obj);
 	}
@@ -73,9 +95,8 @@ io.sockets.on('connection', function (socket) {
 	console.log("connected a player to socket " + socket);
 
 	socket.on('playercreate', function (data) {
-		var name = game.CreatePlayer(socket.PlayerID, data.N);
-
-		var players = [];
+        var name = game.CreatePlayer(socket.PlayerID, data.N);
+		/*var players = [];
 		for (var i in game.Players) {
 			var player = game.Players[i];
 			players.push({ 
@@ -84,12 +105,13 @@ io.sockets.on('connection', function (socket) {
 				Y:player.Pos.Y,
 				R:player.Rotation,
 				L:player.Lives,
-				N:player.name
-				});
-		}
-
-		socket.emit('playercreated', { PlayerID:socket.PlayerID, tick:game.tick, ticktime:game.ticktime, P: players, N:name });
+				N:player.name,
+                T:player.Team});
+		}*/
+        
+		socket.emit('playercreated', { PlayerID:socket.PlayerID, /* tick:game.tick, ticktime:game.ticktime, P: players, */N:name });
 		broadcast('addplayer', { ID: socket.PlayerID, N:name });
+        
 		socket.LastReceive = new Date().getTime();
 	});
 
@@ -116,8 +138,9 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('spawn', function (data) {
-		game.Spawn(data);
-		broadcast('spawn', data);
+		var team = game.Spawn(data);
+        data.T = team;
+        socket.emit('spawned', data);
 	});
 
 	socket.on('hit', function (data) {

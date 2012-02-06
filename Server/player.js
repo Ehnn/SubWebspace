@@ -38,6 +38,7 @@ function Player() {
 
 	this.Lives = 0;
 	this.name = null;
+    this.Team = 0;
 
 	this.Shoot = function () {
 	    if (this.Lives > 0 && this.Reload === 0) {
@@ -55,9 +56,10 @@ function Player() {
 		this.Lives = 0;
 	};
 
-	this.Spawn = function (/** int */ X, /** int */ Y, /** int */ rotation) {
+	this.Spawn = function (/** int */ X, /** int */ Y, /** int */ rotation, /** int */ team) {
 		this.Pos.X = X;
 		this.Pos.Y = Y;
+        this.Team = team;
 		this.Rotation = rotation;
 		this.Lives = 10;
 	};
