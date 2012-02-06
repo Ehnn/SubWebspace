@@ -3,7 +3,7 @@
 	<link type="text/css" href="jquery-ui-1.8.17.custom.css" rel="stylesheet" />
 	<style type="text/css">
 		canvas, img {display:block;margin:1em auto; border:1px solid black;}
-		canvas { z-index:2;position:absolute;background:url(space.jpg) }
+		canvas { z-index:2;position:absolute; }
 		.explosiondiv { z-index:60;position:absolute;background-image: url(explosion1.gif); height: 139px; width: 100px;}
 		.game-wrap {position:relative;merging:0 auto;left:50%;width:800; height:600}
 		.invis { display: none}
@@ -11,61 +11,85 @@
 		#savescore {display: none}
 		.inputtag { width:300px }
 		.inputfield {width:300px}
+        .centered { align:center }
 	</style>
 	<title>Adam Zeira and Shirly Biniashvili</title>
 </head>
 <body>
+<div id="fb-root"></div>
+<script>
+    window.fbAsyncInit = function() {
+        FB.init({
+            appId      : '159292470849908',
+            status     : true, 
+            cookie     : true,
+            xfbml      : true,
+            oauth      : true,
+        });
+    };
+    (function(d){
+        var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
+        js = d.createElement('script'); js.id = id; js.async = true;
+        js.src = "//connect.facebook.net/en_US/all.js";
+        d.getElementsByTagName('head')[0].appendChild(js);
+     }(document));
+     
+     var test = function (params) {
+         alert('in test');
+         if (params)
+            alert(params);
+     };
+</script>
+    <!--<script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=159292470849908";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>-->
 	<div id="game-wrap">
-
-		<canvas id="gamecanvas" width="800" height="600" style="background-color:Red">
+		<canvas id="gamecanvas" width="800" height="600" style="background-color:Black">
 			Your browser does not support the canvas element
 
 		</canvas>
 		<div id="explosiondiv1" class="explosiondiv invis"></div>
 		<div id="explosiondiv2" class="explosiondiv invis"></div>
-        Sound <input type="checkbox" checked="checked" />
 	</div>
-<script src="socket.io.js"></script>
+    
+<div style="align:center;margin:0 auto">
+<div class="centered" style="align:center">
+    <div class="fb-login-button" data-show-faces="true" data-width="200" data-max-rows="1" onlogin="alert('hi')">Login with Facebook</div>
+    <fb:like send="true" width="450" show_faces="true"></fb:like>
+    <!--<div class="fb-add-to-timeline" data-show-faces="true"></div>-->
+</div>
+<div class="centered">
+    <fb:comments href="http://apps.facebook.com/subwebspace/" num_posts="2" width="470"></fb:comments>
+</div>
+</div>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
-<script src="player.js"></script>
-<script src="laser.js"></script>
-<script src="subwebspacegame.js"></script>
-<script src="asteroid.js"></script>
+<script src="socketio.js" type="text/javascript"></script>
+<script src="player.js" type="text/javascript"></script>
+<script src="laser.js" type="text/javascript"></script>
+<script src="subwebspacegame.js" type="text/javascript"></script>
+<script src="asteroid.js" type="text/javascript"></script>
 
 
 <div id="signup" title="Sign up">
-	<div>To receive emails, you can sign up</div>
+    <div class="fb-login-button" data-show-faces="true" data-width="200" data-max-rows="1" onlogin="alert('hi')">Login with Facebook</div>
+	<!--<div>To receive emails, you can sign up</div>
 	<div><span class='inputtag'>Name</span><input id="namefield" type="text" maxlength=8 class="inputfield"></div>
 	<div><span class='inputtag'>Email</span><input id="emailfield" type="text" class="inputfield"></div>
-	<div><span class='inputtag'>Password</span><input id="passwordfield" type="password" class="inputfield"></div>
+	<div><span class='inputtag'>Password</span><input id="passwordfield" type="password" class="inputfield"></div>-->
 	<div><input class="signupsubmit" type="button" value="Sign up" onclick="postSignup()" /><input type="button" value="Back" onclick="cancelSignup()"></div>
 </div>
 
-<div id="savescore" title="Save score">
-	<div>Your score:<span id="score"></span></div>
-	<div><span class='inputtag'>Name</span><input id="scorenamefield" type="text" maxlength=8 class="inputfield"></div>
-	<div><input class="savescoresubmit" type="button" value="save" onclick="saveScore()" /></div>
-</div>
 <script>
 
 jQuery(function () {
-	jQuery('#signup').dialog({ autoOpen:false, resizable:false });
-    jQuery('#savescore').dialog({ autoOpen:false, resizable:false });
+	jQuery('#signup').dialog({ autoOpen:false, resizable:false});
 });
-
-var saveScore = function () {
-    var form = jQuery("#savescore");
-    var data = {
-		name : form.find("#scorenamefield").val(),
-	        score : game.playerScore
-	};
-
-//    jQuery.post("/savescore", data, function () { alert('success'); }).error(function (e) { alert('error'); });
-    jQuery("#savescore").dialog('close');
-//FIX, move to on success
-	saveName(data.name);
-};
 
 var cancelSignup = function () {
 	jQuery("#signup").dialog('close');
@@ -79,10 +103,52 @@ var showSaveScore = function () {
 
 var showSignup = function () {
     jQuery("#signup").dialog('open');
-	jQuery("#signup").find("#namefield").val(game.myPlayer.name);
+	//jQuery("#signup").find("#namefield").val(game.myPlayer.name);
 };
 
+var getFBName = function () {
+    FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+            var uid = response.authResponse.userID;
+            FB.api('/me', function(response) {
+                saveName(uid, response.name);
+            });
+        } else if (response.status === 'not_authorized') {
+            alert('not authorized');
+            //showSignup();
+        } else {
+            alert('not logged in');
+            //showSignup();
+        }
+    });
+}
+
+var displayHighScores = function (HighScores) {
+    var scoreboard = jQuery('<div />');
+    for (var i in HighScores) {
+        var score = HighScores[i];
+        var container = jQuery('<div />');
+        var image = jQuery('<img />').attr('src', 'http://graph.facebook.com/' + score.FBID + '/picture').css('height', '100px').css('width', '100px').appendTo(container);
+        var name = jQuery('<span />').text(score.N).css('height', '100px').appendTo(container);
+        var scorenum = jQuery('<span />').text(score.S).css('height', '100px').appendTo(container);
+        
+        container.appendTo(scoreboard);
+    }
+    
+    scoreboard.dialog();
+};
+
+
 var postSignup = function () {
+    //FB.api('/me', function(response) {
+      //alert('Your name is ' + response.name);
+    //});
+    
+    return;
+    
+    var data = { email:'abc@asdasd', name:'abcde'};
+    jQuery.post("/", data, function () { }).error(function (e) { });
+    return;
 	var form = jQuery("#signup");
 	var data = {
 		name : form.find("#namefield").val(),
@@ -104,11 +170,9 @@ var postSignup = function () {
     jQuery.post("/savescore", data2, function () { alert('success'); }).error(function (e) { alert('error'); });*/
 };
 
-var saveName = function (name) {
+var saveName = function (id, name) {
 	game.nameChange(name);
-	document.cookie = 'name=' + name;
-	game.hascookie = true;
-	game.saveScore(name);
+	game.saveScore(id);
 };
 
 </script>
