@@ -69,8 +69,6 @@ function Player() {
 	    this.Rotation = rotation;
 
         this.Team = team;
-        /** currently only imgShip1 and imgShip2 */
-        img = game.Resources['imgShip' + team];
         this.Lives = 10;
         this.Alive = true;
 	};
@@ -173,7 +171,12 @@ function Player() {
 	};
 
 	this.Draw = function (translateX, translateY) {
-	    if (this.Lives > 0) {
+        //if it ever matters.. FIX. BADLY.
+        /** currently only imgShip1 and imgShip2 */
+        var img = game.Resources['imgShip' + this.Team];
+        
+	    if (this.Lives > 0 && img) {
+            
 	        game.backBufferContext2D.save();
 	        game.backBufferContext2D.translate(translateX, translateY);
 
@@ -212,9 +215,10 @@ function Player() {
 
         /** player died and has respawned */
          if (this.Lives === 0 && playerdata.L == 10) {
-            this.Lives = 10;
-            this.Alive = true;
+             this.Spawn(playerdata.P.X, playerdata.P.Y, playerdata.R, playerdata.T);
          }
+        
+        this.Team = playerdata.T;
         
         
 		if (playerdata.L < this.Lives)

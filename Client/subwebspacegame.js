@@ -1,20 +1,13 @@
 var FRAMES_PER_SECOND = 30;
-var PACKETS_PER_SECOND = 20;
+var PACKETS_PER_SECOND = 10;
 var MS_BETWEEN_FRAMES = 1000 / FRAMES_PER_SECOND;
 
 var SPACE_WIDTH = 2500;
 var SPACE_HEIGHT = 1800;
 
-var IMAGE_SPACE_WIDTH_RATIO = 1;
-var IMAGE_SPACE_HEIGHT_RATIO = 1;
-
-
 var CANVAS_WIDTH = 1024;
 var CANVAS_HEIGHT = 768;
 var CANVAS_BORDER_SPACE = 20;
-
-var ASTEROID_CREATION_TIME = 7;
-var MAX_ASTEROIDS_NUM = 10;
 
 //var SERVER_CONNECTION = "http://localhost:8080";
 //var SERVER_CONNECTION = "http://10.0.0.4:8080";
@@ -22,7 +15,6 @@ var MAX_ASTEROIDS_NUM = 10;
 var SERVER_CONNECTION = null;
 
 var SEND_TIME = 1000 / PACKETS_PER_SECOND;
-var DRAWS_PER_RECEIVE = FRAMES_PER_SECOND / PACKETS_PER_SECOND;
 
 var PING_SEND_TIME = 1000;
 
@@ -372,7 +364,8 @@ function Game() {
                 /** create a player */
                 var enemyplayer = new Player();
                 enemyplayer.Init(serverplayerdata.ID, serverplayerdata.N);
-                enemyplayer.Spawn(serverplayerdata.P.X, serverplayerdata.P.Y, serverplayerdata.R, serverplayerdata.T);
+                if (serverplayerdata.L > 0)
+                    enemyplayer.Spawn(serverplayerdata.P.X, serverplayerdata.P.Y, serverplayerdata.R, serverplayerdata.T);
                 enemyplayer.updated = true;
                 that.Players.push(enemyplayer);
                 }
@@ -395,7 +388,8 @@ function Game() {
 	        var d = {
 	            P: this.myPlayer.Pos,
 	            R: this.myPlayer.Rotation,
-	            ID: that.myPlayer.ID
+	            ID: that.myPlayer.ID,
+                T: this.myPlayer.Team
 	        };
 
 	        socket.emit("clientdata", d);
@@ -531,20 +525,40 @@ function Game() {
     this.CreateExplosion = function (X, Y) {
         if (sound) game.Resources['sndExplode'].play();
         
+        var explosion = jQuery("#explosiondiv1").clone();
+        explosion.addClass("ExplodingExplosion");
+        explosion[0].X = X;
+        explosion[0].Y = Y;
+        
+        jQuery(explosion).css('left', 400).css('top', 400).removeClass("invis");
+        
+        setTimeout(function () {
+            jQuery(explosion).remove();
+        }, 750);
+        
         var diffX = X - cameraLocationX, diffY = Y - cameraLocationY;
         
         if (diffX >= -CANVAS_WIDTH / 2 && diffX <= CANVAS_WIDTH / 2 &&
             diffY >= -CANVAS_HEIGHT / 2 && diffY <= CANVAS_HEIGHT / 2)
         {
-            var explosion = jQuery("#explosiondiv" + currexplosion).css('left', diffX + CANVAS_WIDTH / 2 - 50).css('top', diffY + CANVAS_HEIGHT / 2 - 60).removeClass("invis");
-            currexplosion = currexplosion == 1 ? 2 : 1;
-            setTimeout(function () { explosion.addClass("invis");}, 750);
+            jQuery(explosion).css('left', diffX + CANVAS_WIDTH / 2 - 50).css('top', diffY + CANVAS_HEIGHT / 2 - 60).removeClass("invis");
         }
     };
 
 	var Draw = function () {
 	    /** clear backbuffer */
 	    that.backBufferContext2D.clearRect(0, 0, that.backBuffer.width, that.backBuffer.height);
+        
+        jQuery(".ExplodingExplosion").each(function () {
+            var diffX = this.X - cameraLocationX, diffY = this.Y - cameraLocationY;
+        
+            if (diffX >= -CANVAS_WIDTH / 2 && diffX <= CANVAS_WIDTH / 2 &&
+                diffY >= -CANVAS_HEIGHT / 2 && diffY <= CANVAS_HEIGHT / 2)
+            {
+                jQuery(this).css('left', diffX + CANVAS_WIDTH / 2 - 50).css('top', diffY + CANVAS_HEIGHT / 2 - 60).removeClass("invis");
+            }
+        });
+        
 
         /** camera set up */
         cameraLocationX = joined ? that.myPlayer.Pos.X : SPACE_WIDTH / 2;

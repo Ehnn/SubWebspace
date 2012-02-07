@@ -41,78 +41,9 @@ function Game() {
 		this.Asteroids = [];
 
 		/** Game loop */
-	        this.gameloop = setInterval(function(){ that.GameLoop();}, SECONDS_BETWEEN_FRAMES);
+	        //this.gameloop = setInterval(function(){ that.GameLoop();}, SECONDS_BETWEEN_FRAMES);
 		
 		return this;
-	};
-
-	this.GameLoop = function () {
-		this.tick++;
-		var thisFrame = new Date().getTime();
-		var dt = (thisFrame - this.lastFrame)/1000;
-	        this.lastFrame = thisFrame;
-
-		this.Update(dt);
-	};
-
-	this.Update = function (/** time diff */ dt) {
-/*		this.AsteroidCreationTimer -= dt;
-		if (this.AsteroidCreationTimer <= 0 && this.Asteroids.length <=MAX_ASTEROIDS_NUM)
-		{
-			this.AsteroidCreationTimer = ASTEROID_CREATION_TIME;
-			CreateAsteroid(3);
-		}*/
-
-		/*for (var i in this.Players)
-		{
-			var player = this.Players[i];
-
-			player.Update(dt);
-			for (var j in player.Shots)
-			{
-				var shot = player.Shots[j];
-
-				//shot.Update(dt);
-
-				//FIX when teams are in, only check on enemies
-				for (var k in this.Players)
-				{
-					var otherplayer = this.Players[k];
-					if (otherplayer.ID != player.ID && CheckLaserCollision(otherplayer, shot))
-					{
-						otherplayer.Lives--;
-						if (otherplayer.Lives <= 0)
-						{
-							otherplayer.Destroy();
-						}
-						
-						DestroyShot(player, j);
-					}
-				}
-
-				if (shot.Fadeout <= 0) DestroyShot(player, i);
-			}
-		}*/
-
-/*
-		for (var i in this.Asteroids) {
-			asteroid = this.Asteroids[i];
-			asteroid.Update(dt);
-
-			if (CheckAsteroidCollision(that.goodPlayer, asteroid))
-			{
-				that.goodPlayer.Destroy();
-				if (that.GameState != 1)
-					that.GameState = 2;
-			}
-
-			if (CheckAsteroidCollision(that.evilPlayer, asteroid))
-			{
-				that.evilPlayer.Destroy();
-				if (that.GameState != 2)
-					that.GameState = 1;
-			}
-		}*/
 	};
 
 	var DestroyShot = function (player, i) {
@@ -178,17 +109,26 @@ function Game() {
         
         teamTotals[min]++;
         
-		for (var i in this.Players)
+		for (var i in this.Players) {
 			if (this.Players[i].ID == data.ID)
 				this.Players[i].Spawn(data.X, data.Y, data.R, min);
+		}
                 
         return min;
 	};
 
 	this.Hit = function (data) {
 		for (var i in this.Players)
-			if (this.Players[i].ID == data.ID)
-				this.Players[i].Lives--;
+			if (this.Players[i].ID == data.ID) {
+                var player = this.Players[i];
+                player.Lives--;
+                
+                if (player.Lives <= 0) {
+                    teamTotals[player.Team]--;
+                    player.Team = 0;
+                    player.Alive = false;
+                }
+			}
 	};
     
 	this.RemovePlayer = function (/** int */ id) {

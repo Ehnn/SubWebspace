@@ -65,70 +65,6 @@ function Player() {
 	};
 
 	this.Update = function (dt) {
-		/*if (this.Accelerating === 0)
-		{
-			this.Acceleration.X = 0;
-			this.Acceleration.Y = 0;
-		}
-		else
-		{
-			this.Acceleration.X += this.Accelerating * dt * PLAYER_ACCELERATION_SPEED * this.Forward.X;
-			this.Acceleration.Y += this.Accelerating * dt * PLAYER_ACCELERATION_SPEED * this.Forward.Y;
-		}
-
-		if (this.Rotating !== 0) this.Rotation += this.Rotating * dt * PLAYER_ROTATION_SPEED;*/
-
-		/*if (this.Shooting === true)
-			this.Shoot();
-
-		if (this.Reload !== 0)
-		{
-			this.Reload -= dt;
-			if (this.Reload <= 0) this.Reload = 0;
-		}
-		if (this.Pos.X >= CANVASWIDTH + CANVAS_BORDER_SPACE) this.Pos.X -= CANVASWIDTH;
-		if (this.Pos.X <= - CANVAS_BORDER_SPACE) this.Pos.X += CANVASWIDTH;
-		if (this.Pos.Y >= CANVASHEIGHT + CANVAS_BORDER_SPACE) this.Pos.Y -= CANVASHEIGHT;
-		if (this.Pos.Y <= - CANVAS_BORDER_SPACE) this.Pos.Y += CANVASHEIGHT;*/
-
-		/** calculate forward */
-//		this.Forward.X = Math.sin(Math.PI + this.Rotation * Math.PI / 180);
-//		this.Forward.Y = Math.cos(Math.PI + this.Rotation * Math.PI / 180);
-
-		/** acceleration cap */
-/*		if (this.Acceleration.X >= PLAYER_ACCELERATION_CAP) this.Acceleration.X = PLAYER_ACCELERATION_CAP;
-		if (this.Acceleration.X <= -PLAYER_ACCELERATION_CAP) this.Acceleration.X = -PLAYER_ACCELERATION_CAP;
-		if (this.Acceleration.Y >= PLAYER_ACCELERATION_CAP) this.Acceleration.Y = PLAYER_ACCELERATION_CAP;
-		if (this.Acceleration.Y <= -PLAYER_ACCELERATION_CAP) this.Acceleration.Y = -PLAYER_ACCELERATION_CAP;*/
-
-		/** acceleration effect on speed */
-//		this.Speed.X += this.Acceleration.X;
-//		this.Speed.Y += this.Acceleration.Y;
-
-/*		if (this.Accelerating)
-		{
-			this.Speed.X += dt * PLAYER_ACCELERATION_SPEED * this.Forward.X;
-			this.Speed.Y += dt * PLAYER_ACCELERATION_SPEED * this.Forward.Y;
-		}*/
-
-//		var SPACE_FRICTION = 2;
-
-		/** Deceleration */
-/*		var frictiondir;
-		
-		frictiondir = this.Speed.X >= 0 ? -1 : 1;
-		this.Speed.X += frictiondir * dt * SPACE_FRICTION;
-		if ((frictiondir <= 0 && this.Speed.X <= 0) || (frictiondir >= 0 && this.Speed.X >= 0)) this.Speed.X = 0;
-
-		frictiondir = this.Speed.Y >= 0 ? -1 : 1;
-		this.Speed.Y += frictiondir * dt * SPACE_FRICTION;
-		if ((frictiondir <= 0 && this.Speed.Y <= 0) || (frictiondir >= 0 && this.Speed.Y >= 0)) this.Speed.Y = 0;*/
-
-//		this.Speed.X -= dt * this.Speed.X / 2;
-//		this.Speed.Y -= dt * this.Speed.Y / 2;
-
-//		this.Pos.X += this.Speed.X;
-//		this.Pos.Y += this.Speed.Y * -1;
 	};
 
 	this.Destroy = function () {
@@ -138,39 +74,6 @@ function Player() {
 	this.UpdateData = function (/** client player obj */ playerdata) {
 		this.Pos = playerdata.P;
 		this.Rotation = playerdata.R;
-
-		this.Shots = playerdata.S;
-/*		for (var i in playerdata.S) {
-			var shot = playerdata.S[i];
-
-		}*/
-
-		/*rightKeyPressTime = playerdata.rightKeyPressTime;
-		leftKeyPressTime = playerdata.leftKeyPressTime;
-		upKeyPressTime = playerdata.upKeyPressTime;
-		downKeyPressTime = playerdata.downKeyPressTime;
-		console.log(downKeyPressTime);
-		spaceKeyPressTime = playerdata.spaceKeyPressTime;
-
-		if (upKeyPressTime)
-			this.Accelerating = true;
-
-//		this.Acceleration.X += this.forwardKeyPressTime * PLAYER_ACCELERATION_SPEED * this.Forward.X - this.backwardKeyPressTime * PLAYER_ACCELERATION_SPEED * this.Forward.X;
-		/*this.Acceleration.X = this.Forward.X * PLAYER_ACCELERATION_SPEED * (upKeyPressTime - downKeyPressTime);
-
-		this.Acceleration.Y = this.Forward.Y * PLAYER_ACCELERATION_SPEED * (upKeyPressTime - downKeyPressTime);
-
-		this.Rotation += (rightKeyPressTime - leftKeyPressTime) * PLAYER_ROTATION_SPEED;
-		/*this.Accelerating = playerdata.Accelerating;
-		this.Rotating = playerdata.Rotating;
-		this.Shooting = playerdata.Shooting;*/
+		this.Team = playerdata.T;
 	};
-
-
-	var rightKeyPressTime = 0;
-	var leftKeyPressTime = 0;
-	var upKeyPressTime = 0;
-	var downKeyPressTime = 0;
-	var spaceKeyPressTime = 0;
-
 }

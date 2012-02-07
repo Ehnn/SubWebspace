@@ -4,7 +4,7 @@ var UPDATE_TIME_BETWEEN_SENDS = 1000 / UPDATES_PER_SECOND;
 var SOCKETS_CLEANUP_INTERVAL = 10000;
 var SOCKET_MIN_SEND_TIME = 10000;
 
-/** For web listening */
+/** For web listening, debugging version */
 var express = require('express');
 
 var app = express.createServer(express.static(__dirname.replace('/Server', '/Client')));
@@ -26,10 +26,13 @@ app.post("/", function (req,res) {
 app.listen(process.env.PORT);
 
 var io = require('socket.io').listen(app);
+/** end of debugging version */
+
+/** work version */
+//var io = require('socket.io').listen(8080);
+/** end of work version */
 
 var spacegame = require('./subwebspacegame');
-
-//var io = require('socket.io').listen();
 
 var game = spacegame.MakeGame();
 
