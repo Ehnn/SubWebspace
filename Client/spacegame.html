@@ -26,6 +26,11 @@
             xfbml      : true,
             oauth      : true,
         });
+        FB.getLoginStatus(function(response) {
+            alert('got status');
+            //onStatus(response); // once on page load
+            //FB.Event.subscribe('auth.statusChange', getFBName); // every status change
+        });
     };
     (function(d){
         var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
@@ -99,13 +104,14 @@ var FBName = "";
 var FBID = null;
 
 var getFBName = function (callback) {
+    alert('name');
     FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
             var uid = response.authResponse.userID;
             FB.api('/me', function(response) {
                 FBName = response.name;
                 FBID = uid;
-                if (callback) callback(name);
+                if (callback) callback(FBName);
             });
         } else if (response.status === 'not_authorized') {
             if (callback) callback();
@@ -113,7 +119,7 @@ var getFBName = function (callback) {
             if (callback) callback();
         }
     });
-}
+};
 
 var displayHighScores = function (HighScores) {
     var scoreboard = jQuery('<div />');
