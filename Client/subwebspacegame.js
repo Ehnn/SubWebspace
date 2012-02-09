@@ -44,13 +44,13 @@ var loadables = {
         type : "image",
         src : "asteroid.png"},
     "imgShip1": {
-    	loaded : false,
-    	type : "image",
-    	src : "spaceship1.png"},
+        loaded : false,
+        type : "image",
+        src : "spaceship1.png"},
     "imgShip2": {
-    	loaded : false,
-    	type : "image",
-    	src : "spaceship2.png"},
+        loaded : false,
+        type : "image",
+        src : "spaceship2.png"},
     "imgSpace": {
         loaded: false,
         type : "image",
@@ -73,7 +73,6 @@ function Game() {
 	this.myPlayer = null;
 	this.Asteroids = [];
 	this.AsteroidCreationTimer = 0;
-	
 
 	/** -1 = before game began, 1 = loading resources, 2 = ready to connect, 3 = connecting, 4 = dead, 5 = alive */
 //maybe later add our team wins, their team wins
@@ -103,7 +102,6 @@ function Game() {
     this.Resources = {};
     
     var sound = true;
-    var currexplosion = 1;
     var cameraLocationX, cameraLocationY;
     var mapleftedge = 4 * CANVAS_WIDTH / 5, mapwidth = 1 * CANVAS_WIDTH / 6;
     var maptopedge = 4 * CANVAS_HEIGHT / 5, mapheight = 1 * CANVAS_HEIGHT / 6;
@@ -142,8 +140,8 @@ function Game() {
 		    flag = false;
 	    
 	    if (flag && !resourcesloaded) {
-    		resourcesloaded = true;
-    		jQuery(that).trigger("ResourcesLoaded");
+            resourcesloaded = true;
+            jQuery(that).trigger("ResourcesLoaded");
 	    }
 	};
 
@@ -178,14 +176,13 @@ function Game() {
 	    game.GameState = 4;
 
 	    /** save the score / Offer the player to sign up / offer the player to save the score */
-        getFBName();
         
-		/*if (this.hascookie)
-			this.saveScore();
-		else
-			showSignup();*/
-//		else
-//			showSaveScore();
+        getFBName(function (name) {
+            if (name === null)
+                showSignup();
+            else if (name !== null && name != this.myPlayer.name)
+                nameChange(name);
+            });
 	};
     
 	this.saveScore = function (id) {
@@ -221,8 +218,11 @@ function Game() {
 	    that.GameState = 3;
 	    socket = io.connect(SERVER_CONNECTION);
 	    //FIX name
-	    socket.emit('playercreate', { N: that.myPlayer.name });
-	    socket.on('playercreated', function (data) {
+        
+        getFBName(function (name) {
+            socket.emit('playercreate', { N: name });
+        });
+        socket.on('playercreated', function (data) {
 	        that.Connected = true;
 	        that.myPlayer.Init(data.PlayerID, data.N);
 	        that.GameState = 4;
@@ -731,8 +731,9 @@ function Game() {
 	};
 
 	var drawInstructions = function () {
-		that.backBufferContext2D.font = "bold 30px sans-serif";
-		that.backBufferContext2D.width = 3;
+        that.backBufferContext2D.font = "bold 30px sans-serif";
+        that.backBufferContext2D.fillStyle = "Red";
+    	that.backBufferContext2D.fillText("If the game is stuck at connecting, you need to turn off your firewall", 20, 100);
 
 		that.backBufferContext2D.fillStyle = "Orange";
 		that.backBufferContext2D.fillText("Instructions:", 100, CANVAS_HEIGHT / 4);
