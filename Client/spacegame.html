@@ -18,32 +18,40 @@
 <body>
 <div id="fb-root"></div>
 <script>
+    var FBName = null;
+    var FBID = null;
+
+    var GetName = function (response) {
+        if (response.status == 'connected') {
+            var uid = response.authResponse.userID;
+            FB.api('/me', function(response) {
+                FBName = response.name;
+                FBID = uid;
+                if (game)
+                    game.nameChange(FBName);
+            });
+        }
+     };
+
     window.fbAsyncInit = function() {
-        FB.init({
-            appId      : '159292470849908',
-            status     : true, 
-            cookie     : true,
-            xfbml      : true,
-            oauth      : true,
-        });
-        FB.getLoginStatus(function(response) {
-            alert('got status');
-            //onStatus(response); // once on page load
-            //FB.Event.subscribe('auth.statusChange', getFBName); // every status change
-        });
-    };
+            FB.init({
+                appId      : '159292470849908',
+                status     : true, 
+                cookie     : true,
+                xfbml      : true,
+                oauth      : true,
+            });
+            
+            FB.getLoginStatus(GetName);
+            FB.Event.subscribe('auth.statusChange', GetName);
+        };
+        
     (function(d){
         var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
         js = d.createElement('script'); js.id = id; js.async = true;
         js.src = "//connect.facebook.net/en_US/all.js";
         d.getElementsByTagName('head')[0].appendChild(js);
      }(document));
-     
-     var test = function (params) {
-         alert('in test');
-         if (params)
-            alert(params);
-     };
 </script>
 	<div id="game-wrap">
 		<canvas id="gamecanvas" width="800" height="600" style="background-color:Black">
@@ -96,30 +104,34 @@ var nameChange = function () {
 };
 
 var showSignup = function () {
-    jQuery("#signup").dialog('open');
+    
+    FB.login(GetName, {scope: 'email'});
+    
+    //jQuery("#signup").dialog('open');
 	//jQuery("#signup").find("#namefield").val(game.myPlayer.name);
 };
 
-var FBName = "";
-var FBID = null;
-
 var getFBName = function (callback) {
-    alert('name');
     FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
             var uid = response.authResponse.userID;
             FB.api('/me', function(response) {
                 FBName = response.name;
                 FBID = uid;
-                if (callback) callback(FBName);
+                if (isFunction(callback)) callback(FBName);
             });
         } else if (response.status === 'not_authorized') {
-            if (callback) callback();
+            if (isFunction(callback)) callback();
         } else {
-            if (callback) callback();
+            if (isFunction(callback)) callback();
         }
     });
 };
+
+function isFunction(functionToCheck) {
+    var getType = {};
+    return functionToCheck && getType.toString.call(functionToCheck) == '[object Function]';
+}
 
 var displayHighScores = function (HighScores) {
     var scoreboard = jQuery('<div />');

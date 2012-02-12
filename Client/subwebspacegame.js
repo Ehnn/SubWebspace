@@ -176,13 +176,10 @@ function Game() {
 	    game.GameState = 4;
 
 	    /** save the score / Offer the player to sign up / offer the player to save the score */
-        
-        getFBName(function (name) {
-            if (name === null)
-                showSignup();
-            else if (name !== null && name != this.myPlayer.name)
-                nameChange(name);
-            });
+        if (FBName === null)
+            showSignup();
+        else if (FBName != that.myPlayer.name)
+            nameChange(FBName);
 	};
     
 	this.saveScore = function (id) {
@@ -217,27 +214,13 @@ function Game() {
 	    //connect
 	    that.GameState = 3;
 	    socket = io.connect(SERVER_CONNECTION);
-	    //FIX name
-        
-        getFBName(function (name) {
-            socket.emit('playercreate', { N: name });
-        });
+
+        socket.emit('playercreate', { N: FBName });
+            
         socket.on('playercreated', function (data) {
 	        that.Connected = true;
 	        that.myPlayer.Init(data.PlayerID, data.N);
 	        that.GameState = 4;
-
-	        /** Fill player list */
-	        //that.Players = [];
-	        /*for (var i in data.P) {
-	            var player = data.P[i];
-	            var newplayer = new Player();
-	            newplayer.Init(player.ID, player.N);
-                if (player.L)
-	                newplayer.Spawn(player.X, player.Y, player.R, player.T);
-	            newplayer.Lives = player.L;
-	            that.Players.push(newplayer);
-	        }*/
 
 	        socket.on("gamedata", that.ReceiveData);
 	        socket.on("serverping", pingCallback);
@@ -407,8 +390,11 @@ function Game() {
 	};
 
 	this.nameChange = function (name) {
-		this.myPlayer.name = name;
-		socket.emit('playernamechange', { N:this.myPlayer.name });
+        if (this.myPlayer) {
+    		this.myPlayer.name = name;
+            if (socket)
+                socket.emit('playernamechange', { N:this.myPlayer.name });
+        }
 	};
 
     var LKeyDelayPress = false;
