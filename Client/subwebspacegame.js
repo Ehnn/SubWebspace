@@ -11,8 +11,8 @@ var CANVAS_BORDER_SPACE = 20;
 
 //var SERVER_CONNECTION = "http://localhost:8080";
 //var SERVER_CONNECTION = "http://10.0.0.4:8080";
-//var SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
-var SERVER_CONNECTION = null;
+var SERVER_CONNECTION = "http://spacegame.chickenkiller.com";
+//var SERVER_CONNECTION = null;
 
 var SEND_TIME = 1000 / PACKETS_PER_SECOND;
 
