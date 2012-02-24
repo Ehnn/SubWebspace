@@ -7,23 +7,25 @@ var SOCKET_MIN_SEND_TIME = 10000;
 /** For web listening, debugging version */
 var express = require('express');
 
-var app = express.createServer(express.static(__dirname.replace('/Server', '/Client')));
+var folder;
+var port;
+//folder = '/home/dotcloud/current';
+//folder = '/home/adam/dotcloud/spacegame-on-dotcloud/noderoot';
+folder = __dirname.replace('/Server', '/Client');
+
+//port = 8080;
+port = process.env.C9_PORT;
+
+//console.log(folder);
+var app = express.createServer(express.static(folder));
 app.use(express.bodyParser());
 
 app.get("/", function (req,res) {
     console.log("RECEIVED SOMETHING - GET");
-    console.log(req.params);
     res.redirect("/spacegame.html");
 });
 
-app.post("/", function (req,res) {
-    console.log("RECEIVED SOMETHING - POST");
-    console.log(req.param('email'));
-    res.send("done");
-    //res.redirect("/spacegame.html");
-});
-
-app.listen(process.env.PORT);
+app.listen(port);
 
 var io = require('socket.io').listen(app);
 /** end of debugging version */
@@ -47,7 +49,7 @@ var ShotsFired = [];
 console.log("Starting senddata interval");
 
 var SendData = function () {
-	var players = [];
+    var players = [];
 
 	var T = new Date().getTime();
 
@@ -99,18 +101,6 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('playercreate', function (data) {
         var name = game.CreatePlayer(socket.PlayerID, data.N);
-		/*var players = [];
-		for (var i in game.Players) {
-			var player = game.Players[i];
-			players.push({ 
-				ID:player.ID,
-				X:player.Pos.X,
-				Y:player.Pos.Y,
-				R:player.Rotation,
-				L:player.Lives,
-				N:player.name,
-                T:player.Team});
-		}*/
         
 		socket.emit('playercreated', { PlayerID:socket.PlayerID, /* tick:game.tick, ticktime:game.ticktime, P: players, */N:name });
 		broadcast('addplayer', { ID: socket.PlayerID, N:name });

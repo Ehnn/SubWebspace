@@ -62,7 +62,7 @@ var loadables = {
 };
 
 function Game() {
-	var that = this;
+    var that = this;
 
 	this.canvas = null;
 	this.context2D = null;
@@ -168,6 +168,12 @@ function Game() {
 		jQuery("#game-wrap").addClass("game-wrap").css("margin-left", -CANVAS_WIDTH / 2);
 		jQuery(this).bind("ResourcesLoaded", Start);
 		loadResources();
+        
+        that.myPlayer = new Player();
+        that.myPlayer.isMyPlayer = true;
+
+        /** Game loop */
+        that.gameloop = setInterval(function () { that.GameLoop(); }, MS_BETWEEN_FRAMES);
 		
 		return this;
 	};
@@ -180,6 +186,8 @@ function Game() {
             showSignup();
         else if (FBName != that.myPlayer.name)
             nameChange(FBName);
+        else
+            this.saveScore(FBID);
 	};
     
 	this.saveScore = function (id) {
@@ -192,28 +200,17 @@ function Game() {
 	    jQuery(document).keydown(that.onKeyDown);
 	    jQuery(document).keyup(that.onKeyUp);
 	    that.GameState = 2;
-
-	    that.myPlayer = new Player();
-	    that.myPlayer.isMyPlayer = true;
-
-		/** Get cookies player name */
-		var splitcookies = document.cookie.split(';');
-		for (var i in splitcookies) {
-		    var pair = splitcookies[i].split('=');
-			if (pair[0] == "name") {
-				that.hascookie = true;
-				that.myPlayer.name = pair[1];
-			}
-		}
-
-	    /** Game loop */
-	    that.gameloop = setInterval(function () { that.GameLoop(); }, MS_BETWEEN_FRAMES);
 	};
     //FIX
 	var Connect = function () {
 	    //connect
 	    that.GameState = 3;
 	    socket = io.connect(SERVER_CONNECTION);
+        
+        socket.socket.on('error', function (error) {
+            alert('connection failed');
+            that.GameState = 2;
+        });
 
         socket.emit('playercreate', { N: FBName });
             
@@ -766,13 +763,6 @@ function Game() {
         }
         
         return (parseInt(i) + 1) * linespace;
-    };
-
-    var drawUIBox = function (PosX, PosY, width, height, fill) {
-        that.backBufferContext2D.fillStyle = fill;
-        that.backBufferContext2D.strokeStyle = "White";
-        that.backBufferContext2D.fillRect(PosX, PosY, width, height);
-        that.backBufferContext2D.strokeRect(PosX, PosY, width, height);
     };
 
 	var rightKey = false;

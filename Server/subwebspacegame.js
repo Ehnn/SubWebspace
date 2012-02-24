@@ -10,11 +10,10 @@ MAX_ASTEROIDS_NUM = 10;
 
 module.exports.MakeGame = function () { return new Game(); };
 
-var asteroidfile = require('./asteroid');
 var playerfile = require('./player');
 
 function Game() {
-	var that = this;
+    var that = this;
 	this.Players = null;
 	this.Asteroids = null;
 	this.AsteroidCreationTimer = 0;

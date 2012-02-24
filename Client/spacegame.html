@@ -64,7 +64,7 @@
     
 <div style="align:center;margin:0 auto">
 <div class="centered">
-    <div class="fb-login-button" onlogin="nameChange()"></div>
+    <div class="fb-login-button"></div>
     <!--<div class="fb-login-button" data-show-faces="true" data-width="200" data-max-rows="1" onlogin="alert('hi')">Login with Facebook</div>-->
     <fb:like send="true" width="450" show_faces="true"></fb:like>
     <!--<div class="fb-add-to-timeline" data-show-faces="true"></div>-->
@@ -81,51 +81,17 @@
 <script src="laser.js" type="text/javascript"></script>
 <script src="subwebspacegame.js" type="text/javascript"></script>
 
-
-<div id="signup" title="Sign up">
-    <div class="fb-login-button" onlogin="nameChange()">Login with Facebook</div>
-</div>
-
 <script>
 
 jQuery(function () {
 	jQuery('#signup').dialog({ autoOpen:false, resizable:false});
 });
 
-var cancelSignup = function () {
-	jQuery("#signup").dialog('close');
-	showSaveScore();
-};
-
-var nameChange = function () {
-    getFBName(function (name) {
-        game.nameChange(name);
-    });
-};
-
 var showSignup = function () {
-    
     FB.login(GetName, {scope: 'email'});
     
     //jQuery("#signup").dialog('open');
 	//jQuery("#signup").find("#namefield").val(game.myPlayer.name);
-};
-
-var getFBName = function (callback) {
-    FB.getLoginStatus(function(response) {
-        if (response.status === 'connected') {
-            var uid = response.authResponse.userID;
-            FB.api('/me', function(response) {
-                FBName = response.name;
-                FBID = uid;
-                if (isFunction(callback)) callback(FBName);
-            });
-        } else if (response.status === 'not_authorized') {
-            if (isFunction(callback)) callback();
-        } else {
-            if (isFunction(callback)) callback();
-        }
-    });
 };
 
 function isFunction(functionToCheck) {
@@ -146,11 +112,6 @@ var displayHighScores = function (HighScores) {
     }
     
     scoreboard.dialog();
-};
-
-var saveName = function (id, name) {
-	game.nameChange(name);
-	game.saveScore(id);
 };
 
 </script>
